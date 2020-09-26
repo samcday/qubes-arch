@@ -1,0 +1,31 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=libvchan-socket
+pkgver=mm_ddf38580
+pkgrel=1
+pkgdesc="This is a socket implementation of libvchan, analogous to libvchan-xen"
+arch=(x86_64)
+url=""
+license=('GPL2')
+depends=()
+makedepends=(python)
+changelog=
+source=("git+https://github.com/QubesOS/qubes-core-vchan-socket?tag=${pkgver}")
+sha512sums=('SKIP')
+
+build() {
+  cd "qubes-core-vchan-socket"
+
+  make prefix=/usr all
+}
+
+check() {
+  cd "qubes-core-vchan-socket"
+
+  python -m unittest discover -p 'test_*.py' -v "$@"
+}
+
+package() {
+  cd "qubes-core-vchan-socket"
+
+  make DESTDIR="$pkgdir/" LIBDIR=/usr/lib install
+}
