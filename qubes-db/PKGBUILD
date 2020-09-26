@@ -1,0 +1,44 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=(qubes-db qubes-db-dom0 qubes-db-vm)
+pkgbase=qubes-db
+pkgver=4.1.8
+pkgrel=1
+pkgdesc="Qubes component: core-qubesdb"
+arch=(x86_64)
+url="https://github.com/QubesOS/qubes-core-qubesdb"
+license=('GPL')
+makedepends=(python)
+
+source=(
+  "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
+  )
+sha512sums=('SKIP')
+
+build() {
+  cd qubes-core-qubesdb
+
+  make BACKEND_VMM=xen prefix=/usr all
+}
+
+package_qubes-db() {
+  depends=("libvchan-xen")
+  for dir in $(include python client); do
+    make DESTDIR="$pkgdir/" -C qubes-core-qubesdb/${dir} install
+  done
+}
+
+package_qubes-db-dom0() {
+  depends+=("qubes-db")
+  conflicts+=("qubes-db-vm")
+
+  make DESTDIR="${pkgdir}/" -C qubes-core-qubesdb/daemon install
+  install -D -m 0644 "qubes-core-qubesdb/daemon/qubes-db-dom0.service" "${pkgdir}/usr/lib/systemd/system/qubes-db-dom0.service"
+}
+
+package_qubes-db-vm() {
+  depends+=("qubes-db")
+  conflicts+=("qubes-db-dom0")
+
+  make DESTDIR="${pkgdir}/" -C qubes-core-qubesdb/daemon install
+  install -D -m 0644 "qubes-core-qubesdb/daemon/qubes-db.service" "${pkgdir}/usr/lib/systemd/system/qubes-db.service"
+}
