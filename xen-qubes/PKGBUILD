@@ -18,7 +18,7 @@ _zlib=1.2.3
 _qubes_vm_xen_rel=4
 
 pkgbase=xen-qubes
-pkgname=("xen-qubes-dom0" "xen-qubes-docs")
+pkgname=("xen-qubes" "xen-qubes-docs")
 pkgver=4.14.0
 pkgrel=1
 pkgdesc='Open-source type-1 or baremetal hypervisor'
@@ -159,7 +159,7 @@ build() {
     make XEN_VENDORVERSION=arch
 }
 
-package_xen-qubes-dom0() {
+package_xen-qubes() {
     pkgdesc='Open-source type-1 or baremetal hypervisor'
     provides=(xen)
     conflicts=(xen)
