@@ -1,0 +1,48 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=(qrexec qrexec-dom0 qrexec-vm)
+pkgbase=qrexec
+pkgver=4.1.8
+pkgrel=1
+pkgdesc="qrexec, the Qubes OS Remote Procedure Call (RPC) protocol."
+arch=(x86_64)
+url="https://github.com/QubesOS/qubes-core-qrexec"
+license=('GPL')
+depends=(python python-gbulb)
+makedepends=(python-dbus python-sphinx python-recommonmark python-coverage python-asynctest python-psutil python-pyinotify libvchan-xen)
+source=("git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}")
+sha512sums=('SKIP')
+
+build() {
+  cd "qubes-core-qrexec"
+
+  make BACKEND_VMM=xen prefix=/usr all
+}
+
+check() {
+  cd "qubes-core-qrexec"
+
+  export SKIP_SOCKET_TESTS=1
+  python3 -m coverage run -m pytest qrexec/tests -o python_files=*.py -v "$@"
+}
+
+package_qrexec() {
+  cd "qubes-core-qrexec"
+
+  make DESTDIR="$pkgdir/" install-base
+}
+
+package_qrexec-dom0() {
+  depends+=(qrexec)
+  conflicts+=(qrexec-vm)
+
+  cd "qubes-core-qrexec"
+  make DESTDIR="$pkgdir/" install-dom0
+}
+
+package_qrexec-vm() {
+	depends+=(qrexec)
+	conflicts+=(qrexec-dom0)
+
+  cd "qubes-core-qrexec"
+  make DESTDIR="$pkgdir/" install-vm
+}
