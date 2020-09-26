@@ -1,0 +1,30 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=libvchan-xen
+pkgver=4.1.4
+pkgrel=1
+pkgdesc="Qubes component: core-vchan-xen"
+arch=('x86_64')
+url="https://github.com/QubesOS/qubes-core-vchan-xen"
+license=('GPL2')
+depends=('xen-qubes')
+makedepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+source=(
+	"git+https://github.com/QubesOS/qubes-core-vchan-xen?tag=v${pkgver}"
+	)
+sha512sums=('SKIP')
+
+build() {
+  cd "qubes-core-vchan-xen"
+
+  make prefix=/usr all
+}
+
+package() {
+  cd "qubes-core-vchan-xen"
+
+  make DESTDIR="$pkgdir/" install
+}
