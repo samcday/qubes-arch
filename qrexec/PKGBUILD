@@ -19,9 +19,24 @@ build() {
 }
 
 check() {
-  cd "qubes-core-qrexec"
+  # Disabled atm, qrexec/tests/socket/daemon.py::TestDaemon::test_client_exec hangs.
+  # if pkg-config vchan-socket; then
+  if false; then
+    echo "libvchan-socket is available, including socket tests"
+    cp -R "qubes-core-qrexec" "qubes-core-qrexec-socket"
+    cd qubes-core-qrexec-socket
 
-  export SKIP_SOCKET_TESTS=1
+    export CFLAGS="--coverage -DCOVERAGE"
+    export LDFLAGS=--coverage
+    make -C libqrexec BACKEND_VMM=socket
+    make -C agent BACKEND_VMM=socket
+    make -C daemon BACKEND_VMM=socket
+  else
+    echo "libvchan-socket not available, skipping socket tests"
+    cd qubes-core-qrexec
+    export SKIP_SOCKET_TESTS=1
+  fi
+
   python3 -m coverage run -m pytest qrexec/tests -o python_files=*.py -v "$@"
 }
 
