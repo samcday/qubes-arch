@@ -1,0 +1,6 @@
+[Socket]
+ListenStream=/run/qubes/qubesdb.sock
+ListenStream=/run/qubes/qubesdb.dom0.sock
+
+[Install]
+WantedBy=sockets.target
