@@ -28,9 +28,11 @@ makedepends=(
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
   0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
+  qubes.sysusers
   )
 sha512sums=('SKIP'
-            '3c734f53ff03e27f2652a82da999e489be1cacc232160e47eb75c0c3aded3f02064a60f0995335fe7ad04a73cd5c284f4f3b21d897cb8eaa01cceb548bc6bc14')
+            '3c734f53ff03e27f2652a82da999e489be1cacc232160e47eb75c0c3aded3f02064a60f0995335fe7ad04a73cd5c284f4f3b21d897cb8eaa01cceb548bc6bc14'
+            '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065')
 
 
 prepare() {
@@ -41,7 +43,7 @@ prepare() {
 build() {
   cd "qubes-core-admin"
 
-  make
+  make all
 }
 
 check() {
@@ -61,4 +63,6 @@ package() {
   cd qubes-core-admin
 
   make DESTDIR="$pkgdir/" STATEDIR=/run/qubes install
+
+  install -Dm644 ${srcdir}/qubes.sysusers ${pkgdir}/usr/lib/sysusers.d/qubes.conf
 }
