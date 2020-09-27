@@ -1,4 +1,4 @@
-# Maintainer: Saam Day <me@samcday.com>
+# Maintainer: Sam Day <me@samcday.com>
 pkgname=qubes-dom0
 pkgver=mm_67faa7c1
 pkgrel=1
@@ -65,4 +65,7 @@ package() {
   make DESTDIR="$pkgdir/" STATEDIR=/run/qubes install
 
   install -Dm644 ${srcdir}/qubes.sysusers ${pkgdir}/usr/lib/sysusers.d/qubes.conf
+
+  # Temporary, this belongs somewhere ... else.
+  echo "Qubes on Arch" > ${pkgdir}/etc/qubes-release
 }
