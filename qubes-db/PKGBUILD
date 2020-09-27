@@ -31,7 +31,7 @@ package_qubes-db-dom0() {
   depends+=("qubes-db")
   conflicts+=("qubes-db-vm")
 
-  make DESTDIR="${pkgdir}/" -C qubes-core-qubesdb/daemon install
+  make DESTDIR="${pkgdir}/" SBINDIR=/usr/bin -C qubes-core-qubesdb/daemon install
   install -D -m 0644 "qubes-core-qubesdb/daemon/qubes-db-dom0.service" "${pkgdir}/usr/lib/systemd/system/qubes-db-dom0.service"
 }
 
