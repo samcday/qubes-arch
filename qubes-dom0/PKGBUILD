@@ -1,0 +1,64 @@
+# Maintainer: Saam Day <me@samcday.com>
+pkgname=qubes-dom0
+pkgver=mm_67faa7c1
+pkgrel=1
+pkgdesc="Qubes component: core-admin"
+arch=(x86_64)
+url="https://github.com/qubesos/qubes-core-admin"
+license=('GPL')
+depends=(
+  python
+  python-docutils
+  python-jinja
+  python-lxml
+  # python-qubesdb # Gotta package this
+  python-setuptools
+  python-pyaml
+  xen-qubes
+  libvirt-python
+  pciutils
+  qrexec-dom0
+  qubes-db-dom0
+  # libvirt_driver_xen # ??
+  )
+makedepends=(
+  python-sphinx
+  imagemagick
+  python-dbus)
+source=(
+  "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
+  0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
+  )
+sha512sums=('SKIP'
+            '3c734f53ff03e27f2652a82da999e489be1cacc232160e47eb75c0c3aded3f02064a60f0995335fe7ad04a73cd5c284f4f3b21d897cb8eaa01cceb548bc6bc14')
+
+
+prepare() {
+  cd qubes-core-admin
+  git apply ../0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
+}
+
+build() {
+  cd "qubes-core-admin"
+
+  make
+}
+
+check() {
+  cd qubes-core-admin
+
+  : "${PYTHON:=python3}"
+  : "${TESTPYTHONPATH:=test-packages}"
+
+  PYTHONPATH="${TESTPYTHONPATH}:${PYTHONPATH}"
+  export PYTHONPATH
+
+  "${PYTHON}" setup.py egg_info --egg-base "${TESTPYTHONPATH}"
+  "${PYTHON}" -m coverage run --rcfile=ci/coveragerc -m qubes.tests.run "$@"
+}
+
+package() {
+  cd qubes-core-admin
+
+  make DESTDIR="$pkgdir/" STATEDIR=/run/qubes install
+}
