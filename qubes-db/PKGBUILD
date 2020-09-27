@@ -29,8 +29,8 @@ build() {
 
 package_qubes-db() {
   depends=("libvchan-xen")
-  for dir in $(include python client); do
-    make DESTDIR="$pkgdir/" -C qubes-core-qubesdb/${dir} install
+  for dir in include python client; do
+    make DESTDIR="$pkgdir/" LIBDIR=/usr/lib -C qubes-core-qubesdb/${dir} install
   done
 }
 
