@@ -11,8 +11,15 @@ makedepends=(python)
 
 source=(
   "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
+  0001-Use-RuntimeDirectory-in-systemd-unit-files.patch
   )
-sha512sums=('SKIP')
+sha512sums=('SKIP'
+            'fec6cd18591e274ef2df3f62e1f4bc55e039a70df03e0bbace2ed2cba0340736e6b5bce62d3425d8b219a793e58d0ce62f99e6ef2f129d66341ff68f4cc25b1b')
+
+prepare() {
+  cd qubes-core-qubesdb
+  git apply ../0001-Use-RuntimeDirectory-in-systemd-unit-files.patch
+}
 
 build() {
   cd qubes-core-qubesdb
