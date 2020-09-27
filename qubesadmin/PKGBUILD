@@ -1,0 +1,59 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qubesadmin
+pkgver=mm_07dfe826
+pkgrel=1
+pkgdesc="Qubes management API client "
+arch=(x86_64)
+url=""
+license=('LGPL2.1')
+depends=(
+  python
+  python-daemon
+  python-docutils
+  python-lxml
+  python-xcffib
+  scrypt)
+makedepends=(
+  python-setuptools
+  python-sphinx
+  python-dbus
+  python-yaml
+  )
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=(
+  "git+https://github.com/QubesOS/qubes-core-admin-client?tag=${pkgver}")
+sha512sums=('SKIP')
+
+build() {
+  cd qubes-core-admin-client
+  make all
+}
+
+check() {
+  cd qubes-core-admin-client
+
+  : "${PYTHON:=python3}"
+  : "${ROOTDIR:=.}"
+  : "${TESTPYTHONPATH:=$ROOTDIR/test-packages}"
+
+  PYTHONPATH="${TESTPYTHONPATH}:${PYTHONPATH}"
+  export PYTHONPATH
+
+  [ -r version ] || ln -s ${ROOTDIR}/version ./
+  [ -r setup.py ] || ln -s ${ROOTDIR}/setup.py ./
+  "${PYTHON}" ./setup.py egg_info --egg-base "${TESTPYTHONPATH}"
+  "${PYTHON}" -m coverage run --rcfile=$ROOTDIR/ci/coveragerc -m unittest discover -s qubesadmin/tests -p '*.py' -v "$@"
+
+}
+
+package() {
+  cd qubes-core-admin-client
+  make DESTDIR="$pkgdir/" install
+}
