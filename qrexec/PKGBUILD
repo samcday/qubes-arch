@@ -1,7 +1,7 @@
 # Maintainer: Sam Day <me@samcday.com>
 pkgname=(qrexec qrexec-dom0 qrexec-vm)
 pkgbase=qrexec
-pkgver=4.1.8
+pkgver=mm_68b8b65f
 pkgrel=1
 pkgdesc="qrexec, the Qubes OS Remote Procedure Call (RPC) protocol."
 arch=(x86_64)
@@ -9,8 +9,17 @@ url="https://github.com/QubesOS/qubes-core-qrexec"
 license=('GPL')
 depends=(python python-gbulb)
 makedepends=(python-dbus python-sphinx python-recommonmark python-coverage python-asynctest python-psutil python-pyinotify libvchan-xen)
-source=("git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}")
-sha512sums=('SKIP')
+source=(
+  "git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}"
+  0001-Cleanup-installs-to-use-BINDIR-SBINDIR-LIBDIR.patch
+  )
+sha512sums=('SKIP'
+            'dc369cd4d7b456026ffb4b33eeb9a4ac6abd9d946f8d681498bc0a3bbfdd1d576879c5ad205948a15c7712ab872f534c8eab2e063f369c6cd88b5413ff37d4ab')
+
+prepare() {
+  cd "qubes-core-qrexec"
+  git apply ../0001-Cleanup-installs-to-use-BINDIR-SBINDIR-LIBDIR.patch
+}
 
 build() {
   cd "qubes-core-qrexec"
@@ -50,8 +59,7 @@ package_qrexec-dom0() {
   depends+=(qrexec)
   conflicts+=(qrexec-vm)
 
-  cd "qubes-core-qrexec"
-  make DESTDIR="$pkgdir/" install-dom0
+  make DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
 }
 
 package_qrexec-vm() {

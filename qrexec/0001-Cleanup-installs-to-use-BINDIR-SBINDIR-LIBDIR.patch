@@ -1,0 +1,139 @@
+From 63b8072476c02e80cdf6a6b545e7900fa64fe4e8 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sun, 27 Sep 2020 00:18:45 +0200
+Subject: [PATCH] Cleanup installs to use BINDIR/SBINDIR/LIBDIR.
+
+---
+ Makefile        | 20 ++++++++++++--------
+ agent/Makefile  | 14 ++++++++------
+ daemon/Makefile | 14 +++++++++-----
+ 3 files changed, 29 insertions(+), 19 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index ff4df54..0564ea5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -3,6 +3,10 @@ CC ?= gcc
+ PYTHON ?= python3
+ export PYTHON GCC MAKEFLAGS
+ 
++DESTDIR ?= /
++BINDIR ?= /usr/bin
++LIBDIR ?= /usr/lib
++
+ help:
+ 	:
+ .PHONY: help
+@@ -25,9 +29,9 @@ all-base:
+ install-base: all-base
+ 	+$(MAKE) install -C libqrexec
+ 	$(PYTHON) setup.py install -O1 $(PYTHON_PREFIX_ARG) --skip-build --root $(DESTDIR)
+-	ln -s qrexec-policy-exec $(DESTDIR)/usr/bin/qrexec-policy
+-	install -d $(DESTDIR)/usr/lib/qubes -m 755
+-	install -t $(DESTDIR)/usr/lib/qubes -m 755 lib/*
++	ln -s qrexec-policy-exec $(DESTDIR)$(BINDIR)/qrexec-policy
++	install -d $(DESTDIR)$(LIBDIR)/qubes -m 755
++	install -t $(DESTDIR)$(LIBDIR)/qubes -m 755 lib/*
+ 	install -d $(DESTDIR)/etc/qubes-rpc -m 755
+ 	ln -s /var/run/qubes/policy-agent.sock $(DESTDIR)/etc/qubes-rpc/policy.Ask
+ 	ln -s /var/run/qubes/policy-agent.sock $(DESTDIR)/etc/qubes-rpc/policy.Notify
+@@ -49,7 +53,7 @@ install-dom0: all-dom0
+ 	for RPCNAME in \
+ 		policy.List policy.Get policy.Replace policy.Remove \
+ 		policy.include.List policy.include.Get policy.include.Replace policy.include.Remove; \
+-	do ln -s /usr/bin/qubes-policy-admin $(DESTDIR)/etc/qubes-rpc/$$RPCNAME; \
++	do ln -s $(BINDIR)/qubes-policy-admin $(DESTDIR)/etc/qubes-rpc/$$RPCNAME; \
+ 	done
+ 
+ 	install -d $(DESTDIR)/etc/qubes-rpc/policy -m 775
+@@ -59,8 +63,8 @@ install-dom0: all-dom0
+ 	install -t $(DESTDIR)/etc/qubes/policy.d -m 664 policy.d/README
+ 	install -d $(DESTDIR)/etc/qubes/policy.d/include -m 775
+ 	install -t $(DESTDIR)/etc/qubes/policy.d/include -m 664 policy.d/include/*
+-	install -d $(DESTDIR)/lib/systemd/system -m 755
+-	install -t $(DESTDIR)/lib/systemd/system -m 644 systemd/qubes-qrexec-policy-daemon.service
++	install -d $(DESTDIR)$(LIBDIR)/systemd/system -m 755
++	install -t $(DESTDIR)$(LIBDIR)/systemd/system -m 644 systemd/qubes-qrexec-policy-daemon.service
+ .PHONY: install-dom0
+ 
+ 
+@@ -70,8 +74,8 @@ all-vm:
+ 
+ install-vm: all-vm
+ 	+$(MAKE) install -C agent
+-	install -d $(DESTDIR)/lib/systemd/system -m 755
+-	install -t $(DESTDIR)/lib/systemd/system -m 644 systemd/qubes-qrexec-agent.service
++	install -d $(DESTDIR)$(LIBDIR)/systemd/system -m 755
++	install -t $(DESTDIR)$(LIBDIR)/systemd/system -m 644 systemd/qubes-qrexec-agent.service
+ 	install -m 0644 -D qubes-rpc-config/README $(DESTDIR)/etc/qubes/rpc-config/README
+ #	install -d $(DESTDIR)/etc/qubes-rpc -m 755
+ #	install -t $(DESTDIR)/etc/qubes-rpc -m 755 qubes-rpc/*
+diff --git a/agent/Makefile b/agent/Makefile
+index a799215..558d440 100644
+--- a/agent/Makefile
++++ b/agent/Makefile
+@@ -3,6 +3,8 @@ CC ?= gcc
+ PANDOC ?= pandoc
+ BACKEND_VMM ?= xen
+ DESTDIR ?= /
++BINDIR ?= /usr/bin
++LIBDIR ?= /usr/lib
+ .SUFFIXES:
+ override os := $(shell lsb_release -is)
+ override QUBES_CFLAGS := -I. -I../libqrexec -g -O2 -Wall -Wextra -Werror \
+@@ -32,14 +34,14 @@ endif
+ 
+ install: all
+ 	install -d $(DESTDIR)/etc/qubes-rpc $(DESTDIR)/usr/lib/qubes \
+-		$(DESTDIR)/usr/bin $(DESTDIR)/usr/share/man/man1
+-	install qrexec-agent $(DESTDIR)/usr/lib/qubes
+-	install qrexec-client-vm $(DESTDIR)/usr/bin
++		$(DESTDIR)$(BINDIR) $(DESTDIR)/usr/share/man/man1
++	install qrexec-agent $(DESTDIR)$(LIBDIR)/qubes
++	install qrexec-client-vm $(DESTDIR)$(BINDIR)
+ 	install -d $(DESTDIR)/usr/share/man/man1
+ 	install qrexec-client-vm.1.gz $(DESTDIR)/usr/share/man/man1
+-	ln -s ../../bin/qrexec-client-vm $(DESTDIR)/usr/lib/qubes/qrexec-client-vm
+-	ln -s ../../bin/qrexec-client-vm $(DESTDIR)/usr/lib/qubes/qrexec_client_vm
+-	install qrexec-fork-server $(DESTDIR)/usr/bin
++	ln -s ../../bin/qrexec-client-vm $(DESTDIR)$(LIBDIR)/qubes/qrexec-client-vm
++	ln -s ../../bin/qrexec-client-vm $(DESTDIR)$(LIBDIR)/qubes/qrexec_client_vm
++	install qrexec-fork-server $(DESTDIR)$(BINDIR)
+ ifeq ($(os), Debian)
+ 	install -D -m 0644 qrexec.pam.debian $(DESTDIR)/etc/pam.d/qrexec
+ else ifeq ($(os), Ubuntu)
+diff --git a/daemon/Makefile b/daemon/Makefile
+index 458baa0..c6f4380 100644
+--- a/daemon/Makefile
++++ b/daemon/Makefile
+@@ -6,6 +6,10 @@ override QUBES_CFLAGS:=-I../libqrexec -g -O2 -Wall -Wextra -Werror -pie -fPIC \
+ override LDFLAGS += -pie -Wl,-z,relro,-z,now -L../libqrexec
+ override LDLIBS += $(shell pkg-config --libs vchan-$(BACKEND_VMM)) -lqrexec-utils
+ 
++BINDIR ?= /usr/bin
++LIBDIR ?= /usr/lib
++SBINDIR?= /usr/sbin
++
+ MAKEFLAGS := -r
+ .SUFFIXES:
+ 
+@@ -13,11 +17,11 @@ all: qrexec-daemon qrexec-client
+ clean:
+ 	rm -f *.o *~ qrexec-daemon qrexec-client *.o.dep
+ install: all
+-	install -d $(DESTDIR)/usr/sbin $(DESTDIR)/usr/bin
+-	install -t $(DESTDIR)/usr/sbin -m 755 qrexec-daemon
+-	install -t $(DESTDIR)/usr/bin -m 755 qrexec-client
+-	install -d $(DESTDIR)/usr/lib/qubes
+-	ln -s ../../bin/qrexec-client $(DESTDIR)/usr/lib/qubes/qrexec-client
++	install -d $(DESTDIR)$(SBINDIR) $(DESTDIR)$(BINDIR)
++	install -t $(DESTDIR)$(SBINDIR) -m 755 qrexec-daemon
++	install -t $(DESTDIR)$(BINDIR) -m 755 qrexec-client
++	install -d $(DESTDIR)$(LIBDIR)/qubes
++	ln -s $(DESTDIR)$(BINDIR)/qrexec-client $(DESTDIR)$(LIBDIR)/qubes/qrexec-client
+ .PHONY: all clean install
+ 
+ qrexec-daemon qrexec-client: %: %.o
+-- 
+2.28.0
+
