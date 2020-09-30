@@ -1,0 +1,35 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qubes-gui-dom0
+pkgver=4.1.10
+pkgrel=1
+pkgdesc="Qubes component: gui-daemon"
+arch=(x86_64)
+url="https://github.com/QubesOS/qubes-gui-daemon"
+license=('GPL')
+depends=(
+  libconfig
+  libpng
+  libvchan-xen
+  python-xcffib
+  qrexec
+  socat
+  xorg-server
+  )
+makedepends=(
+
+  )
+source=(
+  "git+https://github.com/qubesos/qubes-gui-daemon?tag=${pkgver}"
+  )
+sha512sums=(
+  'SKIP'
+  )
+
+
+build() {
+  make -C qubes-gui-daemon BACKEND_VMM=xen all
+}
+
+package() {
+  make -C qubes-gui-daemon DESTDIR=${pkgdir} LIBDIR=/usr/lib BACKEND_VMM=xen install
+}
