@@ -22,9 +22,7 @@ prepare() {
 }
 
 build() {
-  cd "qubes-core-qrexec"
-
-  make BACKEND_VMM=xen prefix=/usr all
+  BACKEND_VMM=xen make -C "${srcdir}/qubes-core-qrexec" prefix=/usr all
 }
 
 check() {
@@ -50,22 +48,19 @@ check() {
 }
 
 package_qrexec() {
-  cd "qubes-core-qrexec"
-
-  make DESTDIR="$pkgdir/" install-base
+  make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" install-base
 }
 
 package_qrexec-dom0() {
   depends+=(qrexec)
   conflicts+=(qrexec-vm)
 
-  make DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
+  make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
 }
 
 package_qrexec-vm() {
 	depends+=(qrexec)
 	conflicts+=(qrexec-dom0)
 
-  cd "qubes-core-qrexec"
-  make DESTDIR="$pkgdir/" install-vm
+  make -C qubes-core-qrexec DESTDIR="$pkgdir/" install-vm
 }
