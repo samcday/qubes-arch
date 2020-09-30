@@ -1,0 +1,17 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qubes-gui-common
+pkgver=4.1.1
+pkgrel=1
+pkgdesc="Common files for Qubes GUI - protocol headers"
+arch=(x86_64)
+url="http://www.qubes-os.org"
+license=('GPL')
+source=(
+  "git+https://github.com/QubesOS/qubes-gui-common?tag=${pkgver}"
+  )
+sha512sums=('SKIP')
+
+package() {
+  install -D -m 0644 "${srcdir}/qubes-gui-common/include/qubes-gui-protocol.h" "${pkgdir}/usr/include/qubes-gui-protocol.h"
+  install -D -m 0644 "${srcdir}/qubes-gui-common/include/qubes-xorg-tray-defs.h" "${pkgdir}/usr/include/qubes-xorg-tray-defs.h"
+}
