@@ -6,7 +6,9 @@ pkgdesc="Qubes component: core-agent-linux"
 arch=(x86_64)
 url="https://github.com/qubesos/qubes-core-agent-linux"
 license=('GPL')
-depends=()
+depends=(
+	tinyproxy
+	)
 makedepends=()
 source=(
   "git+https://github.com/qubesos/qubes-core-agent-linux?tag=${pkgver}"
