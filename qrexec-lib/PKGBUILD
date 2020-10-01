@@ -1,0 +1,23 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qrexec-lib
+pkgver=4.1.11
+pkgrel=1
+pkgdesc="https://github.com/qubesos/qubes-linux-utils"
+arch=(x86_64)
+url="https://github.com/qubesos/qubes-linux-utils"
+license=('GPL')
+depends=()
+makedepends=()
+optdepends=()
+source=(
+	"git+https://github.com/qubesos/qubes-linux-utils?tag=${pkgver}"
+	)
+sha512sums=('SKIP')
+
+build() {
+  make -C ${srcdir}/qubes-linux-utils/qrexec-lib all
+}
+
+package() {
+  make -C ${srcdir}/qubes-linux-utils/qrexec-lib DESTDIR=${pkgdir} INCLUDEDIR=/usr/include LIBDIR=/usr/lib install
+}
