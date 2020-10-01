@@ -1,0 +1,32 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qubes-gui-vm
+pkgver=4.0.30
+pkgrel=1
+pkgdesc="Qubes component: gui-agent-linux"
+arch=(x86_64)
+url="https://github.com/QubesOS/qubes-gui-agent-linux"
+license=('GPL')
+depends=(
+	python-xcffib
+	qubes-db
+	xorg-server
+ 	xorg-server-xephyr
+	xorg-xinit
+	)
+makedepends=(
+	xorg-server-devel
+	)
+source=(
+	"git+https://github.com/QubesOS/qubes-gui-agent-linux?tag=${pkgver}"
+	)
+sha512sums=(
+	'SKIP'
+	)
+
+build() {
+  make -C "${srcdir}/qubes-gui-agent-linux" BACKEND_VMM=xen appvm
+}
+
+package() {
+  make -C "${srcdir}/qubes-gui-agent-linux" DESTDIR=${pkgdir} SYSLIBDIR=/usr/lib LIBDIR=/usr/lib install
+}
