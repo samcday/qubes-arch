@@ -23,4 +23,5 @@ build() {
 
 package() {
   make -C ${srcdir}/qubes-core-agent-linux DESTDIR=${pkgdir} SYSLIBDIR=/usr/lib SYSTEM_DROPIN_DIR=/usr/lib/systemd/system install-vm
+  make -C ${srcdir}/qubes-core-agent-linux/qubes-rpc DESTDIR=${pkgdir} install
 }
