@@ -7,7 +7,7 @@ pkgdesc="Qubes component: core-qubesdb"
 arch=(x86_64)
 url="https://github.com/QubesOS/qubes-core-qubesdb"
 license=('GPL')
-makedepends=(python)
+makedepends=(git python)
 
 source=(
   "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
