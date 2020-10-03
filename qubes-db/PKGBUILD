@@ -1,61 +1,38 @@
 # Maintainer: Sam Day <me@samcday.com>
-pkgname=(qubes-db qubes-db-dom0 qubes-db-vm)
-pkgbase=qubes-db
+pkgname=qubes-db
 pkgver=4.1.8
 pkgrel=1
 pkgdesc="Qubes component: core-qubesdb"
 arch=(x86_64)
 url="https://github.com/QubesOS/qubes-core-qubesdb"
-license=('GPL')
+license=(GPL)
+depends=(libvchan-xen)
 makedepends=(git python)
+install=qubes-db.install
 
 source=(
   "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
-  0001-Use-RuntimeDirectory-in-systemd-unit-files.patch
-  qubes-db-dom0.socket
-  qubes-db.socket
-  0002-qubesdb-daemon-support-socket-fd-passing-from-system.patch
+  allpatches
   )
 sha512sums=('SKIP'
-            'fec6cd18591e274ef2df3f62e1f4bc55e039a70df03e0bbace2ed2cba0340736e6b5bce62d3425d8b219a793e58d0ce62f99e6ef2f129d66341ff68f4cc25b1b'
-            '0c7415afa44301ac1f52322c74b349545acf0dacb040f82a32e137e4aa89d02c52b5dcaac90d90cead1d6bbeef8d4f29c38129f5f2b6750669f4134f31315fb4'
-            '4b2ed46d717c94683455047f5c9b0b472f73a707a569c8001a021877219678eed0b97776de5c49709a46ec0dbe049341e8329a8984135d2482dce22de718daa2'
-            '26525eaf3f20a41b3ec205e33cce2e6245f55e6ceb3a110ab4a1ff8dea0693b0260294edd7b117ac5ba6b8be0107f4155414b7de08a89818fd443da10775aa5f')
+            '005e70d92ddef0ad3f96ffe35c80d6b97bfd3df1baff224ac2b2960d1b9d756dfd02ff0a9895656d68fb2834667bf4e26932d6400faf9407e1b64236d64a8f19')
 
 prepare() {
-  cd qubes-core-qubesdb
-  git am ${srcdir}/*.patch
+  {
+    set -uex -o pipefail
+    patch -p2 -d ${srcdir} < allpatches
+  }
 }
 
 build() {
-  cd qubes-core-qubesdb
-
-  make BACKEND_VMM=xen prefix=/usr all
+  make -C ${srcdir}/qubes-core-qubesdb BACKEND_VMM=xen prefix=/usr all
 }
 
-package_qubes-db() {
-  depends=("libvchan-xen")
-  for dir in include python client; do
-    make DESTDIR="$pkgdir/" LIBDIR=/usr/lib -C qubes-core-qubesdb/${dir} install
+package() {
+  for dir in include python client daemon; do
+    make -C ${srcdir}/qubes-core-qubesdb/${dir} DESTDIR="$pkgdir/" SBINDIR=/usr/bin LIBDIR=/usr/lib install
   done
-}
 
-package_qubes-db-dom0() {
-  install=qubes-db-dom0.install
-  depends+=("qubes-db")
-  conflicts+=("qubes-db-vm")
-
-  make DESTDIR="${pkgdir}/" SBINDIR=/usr/bin -C qubes-core-qubesdb/daemon install
-  install -D -m 0644 "${srcdir}/qubes-core-qubesdb/daemon/qubes-db-dom0.service" "${pkgdir}/usr/lib/systemd/system/qubes-db-dom0.service"
-  install -D -m 0644 "${srcdir}/qubes-db-dom0.socket" "${pkgdir}/usr/lib/systemd/system/qubes-db-dom0.socket"
-}
-
-package_qubes-db-vm() {
-  install=qubes-db.install
-  depends+=("qubes-db")
-  conflicts+=("qubes-db-dom0")
-
-  make DESTDIR="${pkgdir}/" SBINDIR=/usr/bin -C qubes-core-qubesdb/daemon install
   install -D -m 0644 "${srcdir}/qubes-core-qubesdb/daemon/qubes-db.service" "${pkgdir}/usr/lib/systemd/system/qubes-db.service"
-  install -D -m 0644 "${srcdir}/qubes-db.socket" "${pkgdir}/usr/lib/systemd/system/qubes-db.socket"
+  install -D -m 0644 "${srcdir}/qubes-core-qubesdb/daemon/qubes-db.socket" "${pkgdir}/usr/lib/systemd/system/qubes-db.socket"
 }

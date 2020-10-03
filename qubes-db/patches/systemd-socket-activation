@@ -1,0 +1,41 @@
+add support for systemd socket activation
+Index: qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/db-daemon.c
++++ qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+@@ -482,6 +482,14 @@ int mainloop(struct db_daemon_data *d) {
+ 
+ #define MAX_FILE_PATH 256
+ int init_server_socket(struct db_daemon_data *d) {
++#if HAVE_SYSTEMD
++    if (sd_listen_fds(0) == 1) {
++        fprintf(stderr, "accepting socket from systemd\n");
++        d->socket_fd = SD_LISTEN_FDS_START + 0;
++        return 1;
++    }
++#endif
++
+     char socket_address[MAX_FILE_PATH];
+     struct sockaddr_un sockname;
+     int s;
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.socket
+===================================================================
+--- /dev/null
++++ qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.socket
+@@ -0,0 +1,6 @@
++[Socket]
++ListenStream=/run/qubes/qubesdb.sock
++Symlinks=/run/qubes/qubesdb.dom0.sock
++
++[Install]
++WantedBy=sockets.target
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.socket
+===================================================================
+--- /dev/null
++++ qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.socket
+@@ -0,0 +1,5 @@
++[Socket]
++ListenStream=/run/qubes/qubesdb.sock
++
++[Install]
++WantedBy=sockets.target

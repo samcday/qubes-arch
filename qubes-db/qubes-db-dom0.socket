@@ -1,6 +1,0 @@
-[Socket]
-ListenStream=/run/qubes/qubesdb.dom0.sock
-Symlinks=/run/qubes/qubesdb.sock
-
-[Install]
-WantedBy=sockets.target

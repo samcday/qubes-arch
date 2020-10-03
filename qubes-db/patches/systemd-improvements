@@ -1,0 +1,130 @@
+Make qubes-db more like a systemd "new style daemon"
+
+ * Don't write out pidfile when running under systemd
+ * Add RuntimeDirectory directives to ensure /run/qubes exists
+ * Remove invalid StandardOutput=syslog directive
+ * Make service unit files depend on xenstored
+ 	> libvchan-xen underneath needs xenstore to lookup own domid
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.service
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/qubes-db-dom0.service
++++ qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.service
+@@ -1,12 +1,13 @@
+ [Unit]
+ Description=Qubes DB agent
+-After=systemd-tmpfiles-setup.service
++After=xenstored.service
++Requires=xenstored.service
+ 
+ [Service]
++RuntimeDirectory=qubes
+ # Both agent and daemon for dom0
+ ExecStart=/usr/sbin/qubesdb-daemon 0 dom0
+ Type=notify
+-StandardOutput=syslog
+ 
+ [Install]
+ WantedBy=multi-user.target
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.service
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/qubes-db.service
++++ qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.service
+@@ -1,15 +1,13 @@
+ [Unit]
+ Description=Qubes DB agent
+-After=systemd-modules-load.service fedora-loadmodules.service
+-DefaultDependencies=no
++After=xenstored.service
++Requires=xenstored.service
+ 
+ [Service]
+-ExecStartPre=/bin/mkdir -p /var/run/qubes
++RuntimeDirectory=qubes
+ # Remote Dom ID as an argument
+ ExecStart=/usr/sbin/qubesdb-daemon 0
+ Type=notify
+-StandardOutput=syslog
+ 
+ [Install]
+ WantedBy=sysinit.target
+-
+Index: qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/db-daemon.c
++++ qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+@@ -498,6 +498,7 @@ int init_server_socket(struct db_daemon_
+                 perror("symlink " QDB_DAEMON_LOCAL_PATH);
+                 return 0;
+             }
++            fprintf(stderr, "symlinked %s -> %s\n", QDB_DAEMON_LOCAL_PATH, socket_address);
+         }
+     } else {
+         snprintf(socket_address, MAX_FILE_PATH,
+@@ -529,6 +530,7 @@ int init_server_socket(struct db_daemon_
+     umask(old_umask);
+     if (stat(sockname.sun_path, &stat_buf) == 0)
+         d->socket_ino = stat_buf.st_ino;
++    fprintf(stderr, "bound socket %s\n", socket_address);
+     return 1;
+ }
+ 
+@@ -683,6 +685,11 @@ int fuzz_main(int argc, char **argv) {
+ #endif
+     int ret;
+ 
++    int under_systemd = 0;
++#ifdef HAVE_SYSTEMD
++    under_systemd = getenv("NOTIFY_SOCKET") != NULL;
++#endif
++
+     if (argc != 2 && argc != 3 && argc != 4) {
+         usage(argv[0]);
+         exit(1);
+@@ -700,11 +707,7 @@ int fuzz_main(int argc, char **argv) {
+      * sucessful start */
+     /* FIXME: OS dependent code */
+ #ifndef WIN32
+-#ifdef HAVE_SYSTEMD
+-    if (!getenv("NOTIFY_SOCKET")) {
+-#else
+-    if (1) {
+-#endif
++    if (!under_systemd) {
+         char buf[6];
+         char log_path[MAX_FILE_PATH];
+         int log_fd;
+@@ -806,18 +809,17 @@ int fuzz_main(int argc, char **argv) {
+ 
+     /* now ready for serving requests, notify parent */
+     /* FIXME: OS dependent code */
+-#ifdef HAVE_SYSTEMD
+-    if (getenv("NOTIFY_SOCKET")) {
++    if (under_systemd) {
+         sd_notify(1, "READY=1");
+-    } else
+-#endif /* HAVE_SYSTEMD */
+-    {
++    } else {
+         if (write(ready_pipe[1], "ready", strlen("ready")) != strlen("ready"))
+             perror("failed to notify parent");
+         close(ready_pipe[1]);
+     }
+ 
+-    create_pidfile(&d);
++    if (!under_systemd) {
++        create_pidfile(&d);
++    }
+ 
+     ret = !mainloop(&d);
+ #endif /* !WIN32 */
+@@ -828,7 +830,9 @@ int fuzz_main(int argc, char **argv) {
+     close_server_socket(&d);
+ 
+ #ifndef WIN32
+-    remove_pidfile(&d);
++    if (!under_systemd) {
++        remove_pidfile(&d);
++    }
+ #endif
+ 
+     return ret;

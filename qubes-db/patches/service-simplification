@@ -1,0 +1,89 @@
+simplify service management
+
+ * Nuke dom0 specific service.
+ * Instead, manage dom0/domU daemons with the same main service.
+Index: qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/db-daemon.c
++++ qubes-db/src/qubes-core-qubesdb/daemon/db-daemon.c
+@@ -657,8 +657,8 @@ void close_server_socket(struct db_daemo
+ #endif // !WIN32
+ 
+ void usage(char *argv0) {
+-    fprintf(stderr, "Usage: %s <remote-domid> [<remote-name>]\n", argv0);
+-    fprintf(stderr, "       Give <remote-name> only in dom0\n");
++    fprintf(stderr, "Usage: %s [<remote-domid>] [<remote-name>]\n", argv0);
++    fprintf(stderr, "       Give <remote-domid> + <remote-name> only in dom0\n");
+ }
+ 
+ #ifdef WIN32
+@@ -698,18 +698,21 @@ int fuzz_main(int argc, char **argv) {
+     under_systemd = getenv("NOTIFY_SOCKET") != NULL;
+ #endif
+ 
+-    if (argc != 2 && argc != 3 && argc != 4) {
++    if (argc != 1 && argc != 3) {
+         usage(argv[0]);
+         exit(1);
+     }
+ 
+     memset(&d, 0, sizeof(d));
+ 
+-    d.remote_domid = atoi(argv[1]);
+-    if (argc >= 3 && strlen(argv[2]) > 0)
++    // Unless remote id + name is given, we assume we're connecting to dom0.
++    d.remote_domid = 0;
++    d.remote_name = "dom0";
++
++    if (argc == 3 && strlen(argv[2]) > 0) {
++        d.remote_domid = atoi(argv[1]);
+         d.remote_name = argv[2];
+-    else
+-        d.remote_name = NULL;
++    }
+ 
+     /* if not running under SystemD, fork and use pipe() to notify parent about
+      * sucessful start */
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.service
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/qubes-db-dom0.service
++++ /dev/null
+@@ -1,13 +0,0 @@
+-[Unit]
+-Description=Qubes DB agent
+-After=xenstored.service
+-Requires=xenstored.service
+-
+-[Service]
+-RuntimeDirectory=qubes
+-# Both agent and daemon for dom0
+-ExecStart=/usr/sbin/qubesdb-daemon 0 dom0
+-Type=notify
+-
+-[Install]
+-WantedBy=multi-user.target
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db-dom0.socket
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/qubes-db-dom0.socket
++++ /dev/null
+@@ -1,6 +0,0 @@
+-[Socket]
+-ListenStream=/run/qubes/qubesdb.sock
+-Symlinks=/run/qubes/qubesdb.dom0.sock
+-
+-[Install]
+-WantedBy=sockets.target
+Index: qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.service
+===================================================================
+--- qubes-db.orig/src/qubes-core-qubesdb/daemon/qubes-db.service
++++ qubes-db/src/qubes-core-qubesdb/daemon/qubes-db.service
+@@ -5,8 +5,7 @@ Requires=xenstored.service
+ 
+ [Service]
+ RuntimeDirectory=qubes
+-# Remote Dom ID as an argument
+-ExecStart=/usr/sbin/qubesdb-daemon 0
++ExecStart=/usr/sbin/qubesdb-daemon
+ Type=notify
+ 
+ [Install]
