@@ -15,7 +15,7 @@ install=libvirt.install
 _qubes_libvirt_rel=2
 
 depends=('libpciaccess' 'yajl' 'fuse2' 'gnutls' 'parted' 'libssh' 'libxml2' 'numactl' 'polkit')
-makedepends=('libxslt' 'python-docutils' 'lvm2' 'open-iscsi' 'libiscsi' 'ceph-libs' 'glusterfs'
+makedepends=('git' 'rpm-tools' 'libxslt' 'python-docutils' 'lvm2' 'open-iscsi' 'libiscsi' 'ceph-libs' 'glusterfs'
              'bash-completion' 'rpcsvc-proto' 'dnsmasq' 'iproute2' 'qemu-headless')
 checkdepends=('ebtables')
 optdepends=('libvirt-qubes-storage-gluster: Gluster storage backend'
