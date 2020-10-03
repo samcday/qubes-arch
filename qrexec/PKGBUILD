@@ -7,8 +7,8 @@ pkgdesc="qrexec, the Qubes OS Remote Procedure Call (RPC) protocol."
 arch=(x86_64)
 url="https://github.com/QubesOS/qubes-core-qrexec"
 license=('GPL')
-depends=(python python-gbulb)
-makedepends=(python-dbus python-sphinx python-recommonmark python-coverage python-asynctest python-psutil python-pyinotify libvchan-xen)
+depends=(libvchan-xen python python-gbulb)
+makedepends=(git pandoc python-dbus python-sphinx python-recommonmark python-coverage python-asynctest python-psutil python-pyinotify python-pytest)
 source=(
   "git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}"
   0001-Cleanup-installs-to-use-BINDIR-SBINDIR-LIBDIR.patch
@@ -52,7 +52,7 @@ package_qrexec() {
 }
 
 package_qrexec-dom0() {
-  depends+=(qrexec)
+  depends+=(qrexec qubes-dom0)
   conflicts+=(qrexec-vm)
 
   make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
