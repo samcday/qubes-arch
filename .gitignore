@@ -1,2 +1,6 @@
 **/src/
 **/pkg/
+*-build.log
+*-package*.log
+*-prepare.log
+*-namcap.log
