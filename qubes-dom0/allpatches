@@ -46,15 +46,16 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
 ===================================================================
 --- qubes-dom0.orig/src/qubes-core-admin/qubes/tools/qmemmand.py
 +++ qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
-@@ -28,6 +28,7 @@ import socket
+@@ -28,6 +28,8 @@ import socket
  import sys
  import threading
  
 +import systemd.daemon
++import systemd.journal
  import xen.lowlevel.xs
  
  import qubes.qmemman
-@@ -235,27 +236,35 @@ parser.add_argument('--foreground',
+@@ -235,27 +237,33 @@ parser.add_argument('--foreground',
  
  
  def main():
@@ -97,15 +98,13 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
 +            logging.root.addHandler(ha_stderr)
 +        sys.stdin.close()
 +    else:
-+        # New style daemon, all logs go to stderr, which is connected to journald.
-+        ha_stderr = logging.StreamHandler(sys.stderr)
-+        ha_stderr.setFormatter(
-+            logging.Formatter('%(name)s: %(message)s'))
-+        logging.root.addHandler(ha_stderr)
++        # Under systemd we use the systemd JournalHandler.
++        logging.root.addHandler(
++            systemd.journal.JournalHandler(SYSLOG_IDENTIFIER="qmemman"))
  
      logging.root.setLevel(parser.get_loglevel_from_verbosity(args))
  
-@@ -281,30 +290,31 @@ def main():
+@@ -281,30 +289,31 @@ def main():
          ' CACHE_FACTOR={algo.CACHE_FACTOR}'.format(
              algo=qubes.qmemman.algo))
  

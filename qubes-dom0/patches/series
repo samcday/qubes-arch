@@ -1,2 +1,3 @@
 tmpfiles-template
 qmemman-service-improvements
+qmemman-systemd-journal
