@@ -1,21 +1,22 @@
-From 673685cda6f664754114b5522c902dfbd881d95c Mon Sep 17 00:00:00 2001
+From 4301a982a521b7672a72f2f5bb2102c0224f1173 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 27 Sep 2020 08:55:49 +0200
 Subject: [PATCH] template tmpfiles-qubes.conf to make /var/run dir
  overridable.
 
 ---
- linux/system-config/Makefile               | 8 ++++++--
+ linux/system-config/Makefile               | 9 +++++++--
  linux/system-config/tmpfiles-qubes.conf.in | 4 ++++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ 2 files changed, 11 insertions(+), 2 deletions(-)
  create mode 100644 linux/system-config/tmpfiles-qubes.conf.in
 
 diff --git a/linux/system-config/Makefile b/linux/system-config/Makefile
-index 865880f4..5280fb0d 100644
+index 865880f4..79f1354f 100644
 --- a/linux/system-config/Makefile
 +++ b/linux/system-config/Makefile
-@@ -1,12 +1,16 @@
+@@ -1,12 +1,17 @@
 +STATEDIR ?= /var/run
++LIBDIR ?= /usr/lib
 +
  all:
  	true

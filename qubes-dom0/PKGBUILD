@@ -30,7 +30,7 @@ source=(
   qubes.sysusers
   )
 sha512sums=('SKIP'
-            '3c734f53ff03e27f2652a82da999e489be1cacc232160e47eb75c0c3aded3f02064a60f0995335fe7ad04a73cd5c284f4f3b21d897cb8eaa01cceb548bc6bc14'
+            '3ae8a7b54c44360a20ccf1df81ab108a886a73caf468402faaf0e48eb21927292630a6a3b3c41fe9c60ea552b62a6e41698357c38a9e4a60585e215b9bd959c5'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065')
 
 
@@ -40,9 +40,7 @@ prepare() {
 }
 
 build() {
-  cd "qubes-core-admin"
-
-  make all
+  make -C ${srcdir}/qubes-core-admin BACKEND_VMM=xen all
 }
 
 check() {
@@ -59,12 +57,22 @@ check() {
 }
 
 package() {
-  cd qubes-core-admin
+  statedir=/run
 
-  make DESTDIR="$pkgdir/" STATEDIR=/run/qubes install
+  make -C ${srcdir}/qubes-core-admin BACKEND_VMM=xen DESTDIR=${pkgdir} STATEDIR=${statedir} install
+
+  # Remove cruft directories that shouldn't have been created in the first place.
+  # Maybe patch these and send upstream?
+  rm -rf ${pkgdir}/run
+  rm -rf ${pkgdir}/var/log
+  rm -rf ${pkgdir}/usr/libexec
+
+  # We're sending all log output to journald, remove the logrotate.
+  rm -rf ${pkgdir}/etc/logrotate.d/
+
+  # Remove Python test code cruft.
+  # TODO: would be much better to tame setuptools to just not install these.
+  rm -rf ${pkgdir}/usr/lib/**/site-packages/**/tests
 
   install -Dm644 ${srcdir}/qubes.sysusers ${pkgdir}/usr/lib/sysusers.d/qubes.conf
-
-  # Temporary, this belongs somewhere ... else.
-  echo "Qubes on Arch" > ${pkgdir}/etc/qubes-release
 }
