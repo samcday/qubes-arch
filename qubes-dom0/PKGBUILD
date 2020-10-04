@@ -26,17 +26,19 @@ makedepends=(
   )
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
-  0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
+  allpatches
   qubes.sysusers
   )
 sha512sums=('SKIP'
-            '3ae8a7b54c44360a20ccf1df81ab108a886a73caf468402faaf0e48eb21927292630a6a3b3c41fe9c60ea552b62a6e41698357c38a9e4a60585e215b9bd959c5'
+            'b5960967f737d431ef2dacfa61301ebca87ef590e35b0dc63bba46aa530798842192a4eaf8c30227b68f8bc7c04ca14c4f3c387fbc984bf12b134d77bea0bbc8'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065')
 
 
 prepare() {
-  cd qubes-core-admin
-  git apply ../0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
+  {
+    set -uex -o pipefail
+    patch -p2 -d ${srcdir} < allpatches
+  }
 }
 
 build() {
