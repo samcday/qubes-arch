@@ -2,4 +2,5 @@ tmpfiles-template
 qmemman-service-improvements
 qmemman-systemd-journal
 qubesd-systemd
+qubesd-dom0-db-special-case
 qubesd-service
