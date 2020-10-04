@@ -11,20 +11,19 @@ depends=(
   python-docutils
   python-jinja
   python-lxml
-  # python-qubesdb # Gotta package this
   python-setuptools
   python-pyaml
   xen-qubes
   libvirt-python
   pciutils
-  qrexec-dom0
-  qubes-db-dom0
-  # libvirt_driver_xen # ??
+  qubes-db
   )
 makedepends=(
-  python-sphinx
   imagemagick
-  python-dbus)
+  lvm2
+  python-dbus
+  python-sphinx
+  )
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
   0001-template-tmpfiles-qubes.conf-to-make-var-run-dir-ove.patch
