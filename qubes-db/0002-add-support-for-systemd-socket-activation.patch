@@ -1,0 +1,58 @@
+From e99de0032323391e18ecb4c3cc5f93c7749b3401 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sun, 4 Oct 2020 21:51:15 +0200
+Subject: [PATCH 2/3] add support for systemd socket activation
+
+---
+ daemon/db-daemon.c          | 8 ++++++++
+ daemon/qubes-db-dom0.socket | 6 ++++++
+ daemon/qubes-db.socket      | 5 +++++
+ 3 files changed, 19 insertions(+)
+ create mode 100644 daemon/qubes-db-dom0.socket
+ create mode 100644 daemon/qubes-db.socket
+
+diff --git a/daemon/db-daemon.c b/daemon/db-daemon.c
+index 5f7e543..d4ee08b 100644
+--- a/daemon/db-daemon.c
++++ b/daemon/db-daemon.c
+@@ -482,6 +482,14 @@ int mainloop(struct db_daemon_data *d) {
+ 
+ #define MAX_FILE_PATH 256
+ int init_server_socket(struct db_daemon_data *d) {
++#if HAVE_SYSTEMD
++    if (sd_listen_fds(0) == 1) {
++        fprintf(stderr, "accepting socket from systemd\n");
++        d->socket_fd = SD_LISTEN_FDS_START + 0;
++        return 1;
++    }
++#endif
++
+     char socket_address[MAX_FILE_PATH];
+     struct sockaddr_un sockname;
+     int s;
+diff --git a/daemon/qubes-db-dom0.socket b/daemon/qubes-db-dom0.socket
+new file mode 100644
+index 0000000..699349c
+--- /dev/null
++++ b/daemon/qubes-db-dom0.socket
+@@ -0,0 +1,6 @@
++[Socket]
++ListenStream=/run/qubes/qubesdb.sock
++Symlinks=/run/qubes/qubesdb.dom0.sock
++
++[Install]
++WantedBy=sockets.target
+diff --git a/daemon/qubes-db.socket b/daemon/qubes-db.socket
+new file mode 100644
+index 0000000..780e40e
+--- /dev/null
++++ b/daemon/qubes-db.socket
+@@ -0,0 +1,5 @@
++[Socket]
++ListenStream=/run/qubes/qubesdb.sock
++
++[Install]
++WantedBy=sockets.target
+-- 
+2.28.0
+

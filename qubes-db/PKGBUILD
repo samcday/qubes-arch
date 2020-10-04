@@ -12,15 +12,18 @@ install=qubes-db.install
 
 source=(
   "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
-  allpatches
+  0001-Make-qubes-db-more-like-a-systemd-new-style-daemon.patch
+  0002-add-support-for-systemd-socket-activation.patch
+  0003-simplify-service-management.patch
   )
 sha512sums=('SKIP'
-            '005e70d92ddef0ad3f96ffe35c80d6b97bfd3df1baff224ac2b2960d1b9d756dfd02ff0a9895656d68fb2834667bf4e26932d6400faf9407e1b64236d64a8f19')
+            'f9176a2e68fb4383ef6545240de948b1b1ed3d6f8079e045b247853ac87e95a76efee8973d07dd410a27462e3cb197ecfb3144cb2caef8558b7342ad226103b3'
+            'bdb792120e5605852dd7d89108b5a0b5a5d28af8b2800075ac2142ad03ef349c3522ba0340a0181804c382b262292839a32a6906f4a14533fb07abfe96e755dd'
+            'ca0c57372842f052a6c35884d0acc970e183f6c36a15f9502816d28d01c21b8cd219845efa352c1864e8a15a1eab1db2c7ade1959fc3000c84f54bcb8fc77bb7')
 
 prepare() {
   {
-    set -uex -o pipefail
-    patch -p2 -d ${srcdir} < allpatches
+    git -C ${srcdir}/qubes-core-qubesdb am ${srcdir}/*.patch
   }
 }
 
