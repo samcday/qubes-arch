@@ -12,6 +12,7 @@ depends=(
   python-jinja
   python-lxml
   python-setuptools
+  python-systemd
   python-pyaml
   xen-qubes
   libvirt-python
@@ -30,7 +31,7 @@ source=(
   qubes.sysusers
   )
 sha512sums=('SKIP'
-            'b5960967f737d431ef2dacfa61301ebca87ef590e35b0dc63bba46aa530798842192a4eaf8c30227b68f8bc7c04ca14c4f3c387fbc984bf12b134d77bea0bbc8'
+            'b401b055e08432c7ebd6b7efd1aa572ebdc9340a7d206d11b957cf432e7c23dc7e37aa981579127ce063d5fdd69da286cdafc71d7af510cffb675819a1f7663f'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065')
 
 
