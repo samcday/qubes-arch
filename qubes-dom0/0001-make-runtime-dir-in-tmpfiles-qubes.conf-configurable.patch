@@ -1,14 +1,25 @@
-From 5d14c929c045f4a45927b265f813dd1a828ff797 Mon Sep 17 00:00:00 2001
+From d9b590fc428702aea6adc03c4bd735162a213e7e Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 22:08:20 +0200
 Subject: [PATCH 1/4] make runtime dir in tmpfiles-qubes.conf configurable.
 
 ---
+ linux/system-config/.gitignore             | 1 +
  linux/system-config/Makefile               | 9 +++++++--
+ linux/system-config/tmpfiles-qubes.conf    | 4 ----
  linux/system-config/tmpfiles-qubes.conf.in | 4 ++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ 4 files changed, 12 insertions(+), 6 deletions(-)
+ create mode 100644 linux/system-config/.gitignore
+ delete mode 100644 linux/system-config/tmpfiles-qubes.conf
  create mode 100644 linux/system-config/tmpfiles-qubes.conf.in
 
+diff --git a/linux/system-config/.gitignore b/linux/system-config/.gitignore
+new file mode 100644
+index 00000000..ca000975
+--- /dev/null
++++ b/linux/system-config/.gitignore
+@@ -0,0 +1 @@
++tmpfiles-qubes.conf
 diff --git a/linux/system-config/Makefile b/linux/system-config/Makefile
 index 865880f4..79f1354f 100644
 --- a/linux/system-config/Makefile
@@ -33,6 +44,16 @@ index 865880f4..79f1354f 100644
  	install -d $(DESTDIR)/etc/logrotate.d
  	install -m 0644 logrotate-qubes \
  		$(DESTDIR)/etc/logrotate.d/qubes
+diff --git a/linux/system-config/tmpfiles-qubes.conf b/linux/system-config/tmpfiles-qubes.conf
+deleted file mode 100644
+index c3ca33b0..00000000
+--- a/linux/system-config/tmpfiles-qubes.conf
++++ /dev/null
+@@ -1,4 +0,0 @@
+-d /var/run/qubes 2770 root qubes
+-f /var/run/qubes/xl-lock 0660 root qubes
+-f /var/run/qubes/empty 0444 root qubes
+-d /var/run/xen-hotplug 0755 root root
 diff --git a/linux/system-config/tmpfiles-qubes.conf.in b/linux/system-config/tmpfiles-qubes.conf.in
 new file mode 100644
 index 00000000..6e9de85f
