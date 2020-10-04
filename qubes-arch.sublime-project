@@ -1,0 +1,25 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"name": "Qubes Arch",
+			"file_exclude_patterns": [
+				// Backup files from quilt.
+				"*~",
+			],
+			"folder_exclude_patterns": [
+				// Quilt state directory, similar to .git
+				".pc",
+			],
+			"binary_file_patterns": [
+				// makepkg package staging directory.
+				"pkg/**",
+				// libvirt build spews lots of mess in here.
+				"build/**",
+				// Duplicates of quilt-managed patches end up in here.
+				"allpatches",
+			]
+		}
+	]
+}
