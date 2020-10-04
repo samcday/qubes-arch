@@ -27,19 +27,22 @@ makedepends=(
   )
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
-  allpatches
+  0001-make-runtime-dir-in-tmpfiles-qubes.conf-configurable.patch
+  0002-qmemman-systemd-improvements.patch
+  0003-qubesd-systemd-improvements.patch
+  0004-qubes-special-case-dom0-qubesdb-connection.patch
   qubes.sysusers
   )
 sha512sums=('SKIP'
-            '1bdb400b520beb4d1478db75d70454d43a1966531f544b4b8f1b491e1add8beb611cd848923e7fbf3d30f89d511fa350489259c58afd981ce3d035039b49bb86'
+            'b460caa23d73f5cc860649e7780f235539e832b673b8a26f5cf0d1e73cd1a1c613e561aae27244bd234812f4ca8374753b6c93d2c590b54d94c2e2628e0cae15'
+            'd37bd8ff293abf1ddcd4ef411af024fe7d191507ed92018dadd537a0ef2ff7b4bdfe990d2f2eb5bc90863dba3bda4f12c67e1ef10e66d3770e35c4d57be35b53'
+            '91c8d619d655544daf6ed5fbbc72e283bf268a4b9f38baff50444333362635d66a36a408008e25b58b454654bc13993df8e3c6aca5a1bc57975947c044e9a500'
+            'cc94cd0404789cc00ade28ba7d8e55eef22f0b9ed4a58fce79db56fcca45cdca7a3a6d638631326588c5bc35745a1e215d6c46894f20a80688b4c60f99d6fd37'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065')
 
 
 prepare() {
-  {
-    set -uex -o pipefail
-    patch -p2 -d ${srcdir} < allpatches
-  }
+  git -C ${srcdir}/qubes-core-admin am ${srcdir}/*.patch
 }
 
 build() {

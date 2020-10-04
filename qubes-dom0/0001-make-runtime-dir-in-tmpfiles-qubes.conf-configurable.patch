@@ -1,7 +1,18 @@
-Index: qubes-dom0/src/qubes-core-admin/linux/system-config/Makefile
-===================================================================
---- qubes-dom0.orig/src/qubes-core-admin/linux/system-config/Makefile
-+++ qubes-dom0/src/qubes-core-admin/linux/system-config/Makefile
+From 5d14c929c045f4a45927b265f813dd1a828ff797 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sun, 4 Oct 2020 22:08:20 +0200
+Subject: [PATCH 1/4] make runtime dir in tmpfiles-qubes.conf configurable.
+
+---
+ linux/system-config/Makefile               | 9 +++++++--
+ linux/system-config/tmpfiles-qubes.conf.in | 4 ++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+ create mode 100644 linux/system-config/tmpfiles-qubes.conf.in
+
+diff --git a/linux/system-config/Makefile b/linux/system-config/Makefile
+index 865880f4..79f1354f 100644
+--- a/linux/system-config/Makefile
++++ b/linux/system-config/Makefile
 @@ -1,12 +1,17 @@
 +STATEDIR ?= /var/run
 +LIBDIR ?= /usr/lib
@@ -22,12 +33,16 @@ Index: qubes-dom0/src/qubes-core-admin/linux/system-config/Makefile
  	install -d $(DESTDIR)/etc/logrotate.d
  	install -m 0644 logrotate-qubes \
  		$(DESTDIR)/etc/logrotate.d/qubes
-Index: qubes-dom0/src/qubes-core-admin/linux/system-config/tmpfiles-qubes.conf.in
-===================================================================
+diff --git a/linux/system-config/tmpfiles-qubes.conf.in b/linux/system-config/tmpfiles-qubes.conf.in
+new file mode 100644
+index 00000000..6e9de85f
 --- /dev/null
-+++ qubes-dom0/src/qubes-core-admin/linux/system-config/tmpfiles-qubes.conf.in
++++ b/linux/system-config/tmpfiles-qubes.conf.in
 @@ -0,0 +1,4 @@
 +d @STATEDIR@/qubes 2770 root qubes
 +f @STATEDIR@/qubes/xl-lock 0660 root qubes
 +f @STATEDIR@/qubes/empty 0444 root qubes
 +d @STATEDIR@/xen-hotplug 0755 root root
+-- 
+2.28.0
+

@@ -1,7 +1,48 @@
-Index: qubes-dom0/src/qubes-core-admin/linux/systemd/qubes-qmemman.socket
-===================================================================
+From e146d3890fa7b5496045253b40713a81fe486087 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sun, 4 Oct 2020 22:09:47 +0200
+Subject: [PATCH 2/4] [qmemman] systemd improvements
+
+ * log straight to journal with official systemd JournalHandler
+ * add socket activation support to daemon, along with socket unit file
+ * use systemd.daemon.notify() rather than manual code writing to socket
+---
+ linux/systemd/Makefile              |  1 +
+ linux/systemd/qubes-qmemman.service |  1 -
+ linux/systemd/qubes-qmemman.socket  |  6 +++
+ qubes/tools/qmemmand.py             | 79 ++++++++++++++++-------------
+ 4 files changed, 51 insertions(+), 36 deletions(-)
+ create mode 100644 linux/systemd/qubes-qmemman.socket
+
+diff --git a/linux/systemd/Makefile b/linux/systemd/Makefile
+index e0cbbf60..fc7bdd77 100644
+--- a/linux/systemd/Makefile
++++ b/linux/systemd/Makefile
+@@ -8,6 +8,7 @@ install:
+ 	cp qubes-core.service $(DESTDIR)$(UNITDIR)
+ 	cp qubes-vm@.service $(DESTDIR)$(UNITDIR)
+ 	cp qubes-qmemman.service $(DESTDIR)$(UNITDIR)
++	cp qubes-qmemman.socket $(DESTDIR)$(UNITDIR)
+ 	cp qubesd.service $(DESTDIR)$(UNITDIR)
+ 	install -d $(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d
+ 	install -m 0644 lvm2-pvscan@.service.d_30_qubes.conf \
+diff --git a/linux/systemd/qubes-qmemman.service b/linux/systemd/qubes-qmemman.service
+index a2830ef0..ac4caffc 100644
+--- a/linux/systemd/qubes-qmemman.service
++++ b/linux/systemd/qubes-qmemman.service
+@@ -4,7 +4,6 @@ Description=Qubes memory management daemon
+ [Service]
+ Type=notify
+ ExecStart=/usr/bin/qmemmand
+-StandardOutput=syslog
+ 
+ [Install]
+ WantedBy=multi-user.target
+diff --git a/linux/systemd/qubes-qmemman.socket b/linux/systemd/qubes-qmemman.socket
+new file mode 100644
+index 00000000..023187be
 --- /dev/null
-+++ qubes-dom0/src/qubes-core-admin/linux/systemd/qubes-qmemman.socket
++++ b/linux/systemd/qubes-qmemman.socket
 @@ -0,0 +1,6 @@
 +[Socket]
 +ListenStream=/run/qubes/qmemman.sock
@@ -9,32 +50,33 @@ Index: qubes-dom0/src/qubes-core-admin/linux/systemd/qubes-qmemman.socket
 +
 +[Install]
 +WantedBy=sockets.target
-Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
-===================================================================
---- qubes-dom0.orig/src/qubes-core-admin/qubes/tools/qmemmand.py
-+++ qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
-@@ -28,6 +28,7 @@ import socket
+diff --git a/qubes/tools/qmemmand.py b/qubes/tools/qmemmand.py
+index 1cb23eb4..ffc5eed2 100644
+--- a/qubes/tools/qmemmand.py
++++ b/qubes/tools/qmemmand.py
+@@ -28,6 +28,8 @@ import socket
  import sys
  import threading
  
 +import systemd.daemon
++import systemd.journal
  import xen.lowlevel.xs
  
  import qubes.qmemman
-@@ -235,27 +236,35 @@ parser.add_argument('--foreground',
+@@ -235,27 +237,33 @@ parser.add_argument('--foreground',
  
  
  def main():
+-    args = parser.parse_args()
 +    under_systemd = 'NOTIFY_SOCKET' in os.environ
-+
-     args = parser.parse_args()
  
 -    # setup logging
 -    ha_syslog = logging.handlers.SysLogHandler('/dev/log')
 -    ha_syslog.setFormatter(
 -        logging.Formatter('%(name)s[%(process)d]: %(message)s'))
 -    logging.root.addHandler(ha_syslog)
--
++    args = parser.parse_args()
+ 
 -    # leave log for backwards compatibility
 -    ha_file = logging.FileHandler(LOG_PATH)
 -    ha_file.setFormatter(
@@ -54,9 +96,10 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
          ha_file.setFormatter(
              logging.Formatter('%(asctime)s %(name)s[%(process)d]: %(message)s'))
 -        logging.root.addHandler(ha_stderr)
-+        logging.root.addHandler(ha_file)
- 
+-
 -    sys.stdin.close()
++        logging.root.addHandler(ha_file)
++
 +        if args.foreground:
 +            ha_stderr = logging.StreamHandler(sys.stderr)
 +            ha_file.setFormatter(
@@ -64,15 +107,13 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
 +            logging.root.addHandler(ha_stderr)
 +        sys.stdin.close()
 +    else:
-+        # New style daemon, all logs go to stderr, which is connected to journald.
-+        ha_stderr = logging.StreamHandler(sys.stderr)
-+        ha_stderr.setFormatter(
-+            logging.Formatter('%(name)s: %(message)s'))
-+        logging.root.addHandler(ha_stderr)
++        # Under systemd we use the systemd JournalHandler.
++        logging.root.addHandler(
++            systemd.journal.JournalHandler(SYSLOG_IDENTIFIER="qmemman"))
  
      logging.root.setLevel(parser.get_loglevel_from_verbosity(args))
  
-@@ -281,30 +290,31 @@ def main():
+@@ -281,30 +289,31 @@ def main():
          ' CACHE_FACTOR={algo.CACHE_FACTOR}'.format(
              algo=qubes.qmemman.algo))
  
@@ -93,12 +134,12 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
 +            os.unlink(SOCK_PATH)
 +        except:
 +            pass
++
++        log.debug('instantiating server')
++        os.umask(0)
  
 -    log.debug('instantiating server')
 -    os.umask(0)
-+        log.debug('instantiating server')
-+        os.umask(0)
-+
 +        server = socketserver.UnixStreamServer(SOCK_PATH, QMemmanReqHandler)
 +        os.umask(0o077)
  
@@ -123,27 +164,6 @@ Index: qubes-dom0/src/qubes-core-admin/qubes/tools/qmemmand.py
  
      threading.Thread(target=server.serve_forever).start()
      XS_Watcher().watch_loop()
-Index: qubes-dom0/src/qubes-core-admin/linux/systemd/Makefile
-===================================================================
---- qubes-dom0.orig/src/qubes-core-admin/linux/systemd/Makefile
-+++ qubes-dom0/src/qubes-core-admin/linux/systemd/Makefile
-@@ -8,6 +8,7 @@ install:
- 	cp qubes-core.service $(DESTDIR)$(UNITDIR)
- 	cp qubes-vm@.service $(DESTDIR)$(UNITDIR)
- 	cp qubes-qmemman.service $(DESTDIR)$(UNITDIR)
-+	cp qubes-qmemman.socket $(DESTDIR)$(UNITDIR)
- 	cp qubesd.service $(DESTDIR)$(UNITDIR)
- 	install -d $(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d
- 	install -m 0644 lvm2-pvscan@.service.d_30_qubes.conf \
-Index: qubes-dom0/src/qubes-core-admin/linux/systemd/qubes-qmemman.service
-===================================================================
---- qubes-dom0.orig/src/qubes-core-admin/linux/systemd/qubes-qmemman.service
-+++ qubes-dom0/src/qubes-core-admin/linux/systemd/qubes-qmemman.service
-@@ -4,7 +4,6 @@ Description=Qubes memory management daem
- [Service]
- Type=notify
- ExecStart=/usr/bin/qmemmand
--StandardOutput=syslog
- 
- [Install]
- WantedBy=multi-user.target
+-- 
+2.28.0
+
