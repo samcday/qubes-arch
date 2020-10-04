@@ -1,7 +1,7 @@
 From 9f67c915cd6710ef636bb9c28420b7fe7576c148 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 22:09:47 +0200
-Subject: [PATCH 2/4] [qmemman] systemd improvements
+Subject: [PATCH 2/5] [qmemman] systemd improvements
 
  * log straight to journal with official systemd JournalHandler
  * add socket activation support to daemon, along with socket unit file

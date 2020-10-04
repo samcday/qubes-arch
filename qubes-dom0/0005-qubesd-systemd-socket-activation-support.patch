@@ -1,0 +1,122 @@
+From 5934ca27274f313a8db5bf3f58ba69be942a8922 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sun, 4 Oct 2020 23:40:51 +0200
+Subject: [PATCH 5/5] [qubesd] systemd socket activation support
+
+---
+ linux/systemd/Makefile      |  1 +
+ linux/systemd/qubesd.socket |  7 +++++++
+ qubes/api/__init__.py       | 27 ++++++++++++++++++++-------
+ qubes/tools/qubesd.py       | 16 +++++++++-------
+ 4 files changed, 37 insertions(+), 14 deletions(-)
+ create mode 100644 linux/systemd/qubesd.socket
+
+diff --git a/linux/systemd/Makefile b/linux/systemd/Makefile
+index fc7bdd77..96f8e78c 100644
+--- a/linux/systemd/Makefile
++++ b/linux/systemd/Makefile
+@@ -10,6 +10,7 @@ install:
+ 	cp qubes-qmemman.service $(DESTDIR)$(UNITDIR)
+ 	cp qubes-qmemman.socket $(DESTDIR)$(UNITDIR)
+ 	cp qubesd.service $(DESTDIR)$(UNITDIR)
++	cp qubesd.socket $(DESTDIR)$(UNITDIR)
+ 	install -d $(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d
+ 	install -m 0644 lvm2-pvscan@.service.d_30_qubes.conf \
+ 		$(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d/30_qubes.conf
+diff --git a/linux/systemd/qubesd.socket b/linux/systemd/qubesd.socket
+new file mode 100644
+index 00000000..6ef79bf6
+--- /dev/null
++++ b/linux/systemd/qubesd.socket
+@@ -0,0 +1,7 @@
++[Socket]
++ListenStream=/run/qubesd.sock
++ListenStream=/run/qubesd.internal.sock
++ListenStream=/run/qubesd.misc.sock
++
++[Install]
++WantedBy=sockets.target
+diff --git a/qubes/api/__init__.py b/qubes/api/__init__.py
+index 43472346..a01f9aaf 100644
+--- a/qubes/api/__init__.py
++++ b/qubes/api/__init__.py
+@@ -29,6 +29,8 @@ import socket
+ import struct
+ import traceback
+ 
++import systemd.daemon
++
+ import qubes.exc
+ 
+ class ProtocolError(AssertionError):
+@@ -414,6 +416,11 @@ def create_servers(*args, force=False, loop=None, **kwargs):
+     '''
+     loop = loop or asyncio.get_event_loop()
+ 
++    # Wrap any passed in file descriptors from systemd into socket objects.
++    # We'll use them in the setup code below, rather than binding ourselves.
++    sd_listen_socks = (socket.fromfd(fd, socket.AF_UNIX,
++        socket.SOCK_STREAM) for fd in systemd.daemon.listen_fds())
++
+     servers = []
+     old_umask = os.umask(0o007)
+     try:
+@@ -425,15 +432,21 @@ def create_servers(*args, force=False, loop=None, **kwargs):
+                 'SOCKNAME needs to be overloaded in {}'.format(
+                     type(handler).__name__)
+ 
+-            if os.path.exists(sockpath):
+-                cleanup_socket(sockpath, force)
++            sock = next(sd_listen_socks)
++            if sock:
++                server = yield from loop.create_unix_server(
++                    functools.partial(QubesDaemonProtocol, handler, **kwargs),
++                    sock=sock)
++            else:
++                if os.path.exists(sockpath):
++                    cleanup_socket(sockpath, force)
+ 
+-            server = yield from loop.create_unix_server(
+-                functools.partial(QubesDaemonProtocol, handler, **kwargs),
+-                sockpath)
++                server = yield from loop.create_unix_server(
++                    functools.partial(QubesDaemonProtocol, handler, **kwargs),
++                    sockpath)
+ 
+-            for sock in server.sockets:
+-                shutil.chown(sock.getsockname(), group='qubes')
++                for sock in server.sockets:
++                    shutil.chown(sock.getsockname(), group='qubes')
+ 
+             servers.append(server)
+     except:
+diff --git a/qubes/tools/qubesd.py b/qubes/tools/qubesd.py
+index c85abc2b..8f217dce 100644
+--- a/qubes/tools/qubesd.py
++++ b/qubes/tools/qubesd.py
+@@ -66,13 +66,15 @@ def main(args=None):
+         loop.run_forever()
+         loop.run_until_complete(asyncio.wait([
+             server.wait_closed() for server in servers]))
+-        for sockname in socknames:
+-            try:
+-                os.unlink(sockname)
+-            except FileNotFoundError:
+-                args.app.log.warning(
+-                    'socket {} got unlinked sometime before shutdown'.format(
+-                        sockname))
++
++        if not systemd.daemon.booted():
++            for sockname in socknames:
++                try:
++                    os.unlink(sockname)
++                except FileNotFoundError:
++                    args.app.log.warning(
++                        'socket {} got unlinked sometime before shutdown'.format(
++                            sockname))
+     finally:
+         loop.close()
+ 
+-- 
+2.28.0
+

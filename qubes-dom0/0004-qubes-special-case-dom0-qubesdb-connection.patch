@@ -1,7 +1,7 @@
 From 77876495d05cf38db7b44aa6ebb495a550164780 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 22:23:53 +0200
-Subject: [PATCH 4/4] [qubes] special case dom0 qubesdb connection
+Subject: [PATCH 4/5] [qubes] special case dom0 qubesdb connection
 
  * That is, connect to qubesdb.sock, rather than qubesdb.dom0.sock
 ---

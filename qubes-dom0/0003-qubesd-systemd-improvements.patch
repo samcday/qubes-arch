@@ -1,7 +1,7 @@
 From 0ef79082d12dc4b4265f6691a826c0c784a722ae Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 22:20:48 +0200
-Subject: [PATCH 3/4] [qubesd] systemd improvements
+Subject: [PATCH 3/5] [qubesd] systemd improvements
 
  * native journal logging
  * drop manual notify socket handling and use qubes.daemon.notify()
