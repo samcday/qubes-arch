@@ -1,0 +1,7 @@
+post_install() {
+	systemctl enable --now qubes-qrexec-policy-daemon.socket
+}
+
+pre_remove() {
+	systemctl disable --now qubes-qrexec-policy-daemon.service qubes-qrexec-policy-daemon.socket
+}

@@ -1,7 +1,7 @@
-From 63b8072476c02e80cdf6a6b545e7900fa64fe4e8 Mon Sep 17 00:00:00 2001
+From bc0624d581094bcb28b8e081804dcc7e04ac3b03 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 27 Sep 2020 00:18:45 +0200
-Subject: [PATCH] Cleanup installs to use BINDIR/SBINDIR/LIBDIR.
+Subject: [PATCH 1/2] Change install targets to use BINDIR/SBINDIR/LIBDIR
 
 ---
  Makefile        | 20 ++++++++++++--------

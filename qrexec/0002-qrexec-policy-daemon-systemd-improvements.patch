@@ -1,0 +1,98 @@
+From 78bd3ee2a21ca656d68b5d713894eb0d7944843d Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Mon, 5 Oct 2020 10:08:04 +0200
+Subject: [PATCH 2/2] [qrexec-policy-daemon] systemd improvements
+
+ * socket activation
+ * native journal logging
+---
+ Makefile                                  |  1 +
+ qrexec/tools/qrexec_policy_daemon.py      | 30 +++++++++++++++++++++--
+ systemd/qubes-qrexec-policy-daemon.socket |  5 ++++
+ 3 files changed, 34 insertions(+), 2 deletions(-)
+ create mode 100644 systemd/qubes-qrexec-policy-daemon.socket
+
+diff --git a/Makefile b/Makefile
+index 0564ea5..763efec 100644
+--- a/Makefile
++++ b/Makefile
+@@ -65,6 +65,7 @@ install-dom0: all-dom0
+ 	install -t $(DESTDIR)/etc/qubes/policy.d/include -m 664 policy.d/include/*
+ 	install -d $(DESTDIR)$(LIBDIR)/systemd/system -m 755
+ 	install -t $(DESTDIR)$(LIBDIR)/systemd/system -m 644 systemd/qubes-qrexec-policy-daemon.service
++	install -t $(DESTDIR)$(LIBDIR)/systemd/system -m 644 systemd/qubes-qrexec-policy-daemon.socket
+ .PHONY: install-dom0
+ 
+ 
+diff --git a/qrexec/tools/qrexec_policy_daemon.py b/qrexec/tools/qrexec_policy_daemon.py
+index 1098e08..af5c5ba 100644
+--- a/qrexec/tools/qrexec_policy_daemon.py
++++ b/qrexec/tools/qrexec_policy_daemon.py
+@@ -24,6 +24,11 @@ import pathlib
+ import asyncio
+ import logging
+ import os
++import socket
++import sys
++
++import systemd.daemon
++from systemd.journal import JournalHandler
+ 
+ from .qrexec_policy_exec import handle_request
+ from .. import POLICYPATH, POLICYSOCKET
+@@ -103,6 +108,17 @@ async def handle_client_connection(log, policy_cache,
+ async def start_serving(args=None):
+     args = argparser.parse_args(args)
+ 
++    if systemd.daemon.booted():
++        def handle_exception(exc_type, exc_value, exc_traceback):
++            if issubclass(exc_type, KeyboardInterrupt):
++                sys.__excepthook__(exc_type, exc_value, exc_traceback)
++                return
++            logging.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
++        sys.excepthook = handle_exception
++
++        logging.root.addHandler(JournalHandler(
++            SYSLOG_IDENTIFIER="qrexec-policy-daemon"))
++
+     logging.basicConfig(format="%(message)s")
+     log = logging.getLogger('policy')
+     log.setLevel(logging.INFO)
+@@ -110,11 +126,21 @@ async def start_serving(args=None):
+     policy_cache = PolicyCache(args.policy_path)
+     policy_cache.initialize_watcher()
+ 
++    server_args = {}
++    sd_listen_fds = systemd.daemon.listen_fds()
++    if sd_listen_fds:
++        server_args['sock'] = socket.fromfd(sd_listen_fds[0], socket.AF_UNIX,
++            socket.SOCK_STREAM)
++    else:
++        server_args['path'] = args.socket_path
++
+     server = await asyncio.start_unix_server(
+         functools.partial(
+             handle_client_connection, log, policy_cache),
+-        path=args.socket_path)
+-    os.chmod(args.socket_path, 0o660)
++        **server_args)
++
++    if 'path' in server_args:
++        os.chmod(args.socket_path, 0o660)
+ 
+     await server.serve_forever()
+ 
+diff --git a/systemd/qubes-qrexec-policy-daemon.socket b/systemd/qubes-qrexec-policy-daemon.socket
+new file mode 100644
+index 0000000..1a57091
+--- /dev/null
++++ b/systemd/qubes-qrexec-policy-daemon.socket
+@@ -0,0 +1,5 @@
++[Socket]
++ListenStream=/run/qubes/policy.sock
++
++[Install]
++WantedBy=sockets.target
+-- 
+2.28.0
+

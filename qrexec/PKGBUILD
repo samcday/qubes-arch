@@ -8,17 +8,30 @@ arch=(x86_64)
 url="https://github.com/QubesOS/qubes-core-qrexec"
 license=('GPL')
 depends=(libvchan-xen python python-gbulb)
-makedepends=(git pandoc python-dbus python-sphinx python-recommonmark python-coverage python-asynctest python-psutil python-pyinotify python-pytest)
+makedepends=(
+  git
+  pandoc
+  python-asynctest
+  python-coverage
+  python-dbus
+  python-psutil
+  python-pyinotify
+  python-pytest
+  python-recommonmark
+  python-sphinx
+  python-systemd
+  )
 source=(
   "git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}"
-  0001-Cleanup-installs-to-use-BINDIR-SBINDIR-LIBDIR.patch
+  0001-Change-install-targets-to-use-BINDIR-SBINDIR-LIBDIR.patch
+  0002-qrexec-policy-daemon-systemd-improvements.patch
   )
 sha512sums=('SKIP'
-            'dc369cd4d7b456026ffb4b33eeb9a4ac6abd9d946f8d681498bc0a3bbfdd1d576879c5ad205948a15c7712ab872f534c8eab2e063f369c6cd88b5413ff37d4ab')
+            'd12ffc9be227cf76ae4bebfc6d6019392b0f0ab0d9f16995d10b5ad9e2b686a600b25c305c3d3c2fc069fba4645327bbc7e1b58dc404a8a683d26de6bf12fdaa'
+            'c29e18e6616742614499676fbbf7c0ef39f31243a9ba9194fbbe273dc01980bf84500fe777afd3c9e72345a6f006c83a77913953f2abe9aa35556d6bf8296a02')
 
 prepare() {
-  cd "qubes-core-qrexec"
-  git apply ../0001-Cleanup-installs-to-use-BINDIR-SBINDIR-LIBDIR.patch
+  git -C ${srcdir}/qubes-core-qrexec am ${srcdir}/*.patch
 }
 
 build() {
@@ -54,6 +67,7 @@ package_qrexec() {
 package_qrexec-dom0() {
   depends+=(qrexec qubes-dom0)
   conflicts+=(qrexec-vm)
+  install=qrexec-dom0.install
 
   make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
 }
