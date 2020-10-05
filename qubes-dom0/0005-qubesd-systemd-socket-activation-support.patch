@@ -1,4 +1,4 @@
-From 5934ca27274f313a8db5bf3f58ba69be942a8922 Mon Sep 17 00:00:00 2001
+From ceb0e86a7c5734f07065dad4d00211c6d37c269a Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 23:40:51 +0200
 Subject: [PATCH 5/5] [qubesd] systemd socket activation support
@@ -37,7 +37,7 @@ index 00000000..6ef79bf6
 +[Install]
 +WantedBy=sockets.target
 diff --git a/qubes/api/__init__.py b/qubes/api/__init__.py
-index 43472346..a01f9aaf 100644
+index 43472346..7a4879c1 100644
 --- a/qubes/api/__init__.py
 +++ b/qubes/api/__init__.py
 @@ -29,6 +29,8 @@ import socket
@@ -67,7 +67,7 @@ index 43472346..a01f9aaf 100644
  
 -            if os.path.exists(sockpath):
 -                cleanup_socket(sockpath, force)
-+            sock = next(sd_listen_socks)
++            sock = next(sd_listen_socks, None)
 +            if sock:
 +                server = yield from loop.create_unix_server(
 +                    functools.partial(QubesDaemonProtocol, handler, **kwargs),
