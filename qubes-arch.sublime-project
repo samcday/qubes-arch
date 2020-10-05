@@ -12,6 +12,7 @@
 			"folder_exclude_patterns": [
 				// makepkg staging directory. very rarely useful to look at.
 				"pkg",
+				"__pycache__",
 			],
 			"binary_file_patterns": [
 				// libvirt build spews lots of mess in here.
