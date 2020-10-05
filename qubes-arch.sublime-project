@@ -5,6 +5,9 @@
 			"path": ".",
 			"name": "Qubes Arch",
 			"file_exclude_patterns": [
+				// patches in src/ directories are just copied from parent
+				// PKGBUILD dir.
+				"src/*.patch",
 			],
 			"folder_exclude_patterns": [
 				// makepkg staging directory. very rarely useful to look at.
@@ -14,6 +17,6 @@
 				// libvirt build spews lots of mess in here.
 				"build/**",
 			]
-		}
+		},
 	]
 }
