@@ -1,0 +1,9 @@
+post_install() {
+  systemctl enable --now qubes-qmemman.socket qubesd.socket
+}
+
+pre_remove() {
+  systemctl disable --now \
+    qubes-qmemman.socket qubes-qmemman.service \
+    qubesd.socket qubesd.service
+}
