@@ -8,6 +8,7 @@ url="https://github.com/qubesos/qubes-core-admin"
 license=('GPL')
 depends=(
   python
+  python-dbus
   python-docutils
   python-jinja
   python-lxml
@@ -34,6 +35,7 @@ source=(
   0003-qubesd-systemd-improvements.patch
   0004-qubes-special-case-dom0-qubesdb-connection.patch
   0005-qubesd-systemd-socket-activation-support.patch
+  0006-qubesd-add-support-for-managing-qube-daemons-via-sys.patch
   )
 sha512sums=('SKIP'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065'
@@ -41,8 +43,8 @@ sha512sums=('SKIP'
             '11f6579906469aa8092810bcd19f24ce4852fb80477cc6f2b318abb7ceeee6149fd73600b54ceb26919b6c7a1f51f8fa4146ebc1e0d123b09bbcd7ebc7628c7d'
             'a386c80e54c7cab9ce6f997a8011bcc902e3c14828dc090f1eae99b6ab3e011d154a0cb7068d3060bb2e0ba1cc88e3fb939211fdc07a75d377ca9f8eb58fe2ab'
             '653dc7e02c7baa0cb95818bba87947eb20ffc04a640780aaacd846dfcba6f27066e767591ba727a01675db65e5662405f2062129cf32b2669a30764ae5d7919e'
-            'f1f62b8348d245a27dd46f5b1b172bb39d73d619bd838b674f9727c02a7fbeed0bd85b431bc730a0c0a005757ac70a03130879d84118e136e9a4d2210caa7073')
-
+            'f1f62b8348d245a27dd46f5b1b172bb39d73d619bd838b674f9727c02a7fbeed0bd85b431bc730a0c0a005757ac70a03130879d84118e136e9a4d2210caa7073'
+            'SKIP')
 
 prepare() {
   git -C ${srcdir}/qubes-core-admin am ${srcdir}/*.patch

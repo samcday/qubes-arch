@@ -1,7 +1,7 @@
 From ceb0e86a7c5734f07065dad4d00211c6d37c269a Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 23:40:51 +0200
-Subject: [PATCH 5/5] [qubesd] systemd socket activation support
+Subject: [PATCH] [qubesd] systemd socket activation support
 
 ---
  linux/systemd/Makefile      |  1 +

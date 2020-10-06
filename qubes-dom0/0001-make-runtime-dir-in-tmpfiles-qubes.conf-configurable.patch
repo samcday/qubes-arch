@@ -1,7 +1,7 @@
 From d9b590fc428702aea6adc03c4bd735162a213e7e Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 22:08:20 +0200
-Subject: [PATCH 1/5] make runtime dir in tmpfiles-qubes.conf configurable.
+Subject: [PATCH] make runtime dir in tmpfiles-qubes.conf configurable.
 
 ---
  linux/system-config/.gitignore             | 1 +
