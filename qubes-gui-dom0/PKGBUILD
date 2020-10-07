@@ -25,7 +25,6 @@ sha512sums=(
   'SKIP'
   )
 
-
 build() {
   make -C qubes-gui-daemon BACKEND_VMM=xen all
 }

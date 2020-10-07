@@ -54,6 +54,14 @@ check() {
 }
 
 package() {
-  cd qubes-core-admin-client
-  make DESTDIR="$pkgdir/" install
+  make -C "${srcdir}/qubes-core-admin-client" DESTDIR=${pkgdir} install
+
+  # Remove XDG autostart stuff, we're using systemd.
+  rm ${pkgdir}/etc/xdg/autostart/qvm-start-daemon.desktop
+  rm ${pkgdir}/etc/xdg/autostart/qvm-start-daemon-kde.desktop
+
+  # TODO, probably delete this also?
+  # /etc/qubes/post-install.d/30-keyboard-layout-service.sh
+
+  find ${pkgdir} -type d -empty -delete
 }
