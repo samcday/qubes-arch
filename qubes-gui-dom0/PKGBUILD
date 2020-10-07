@@ -32,4 +32,17 @@ build() {
 
 package() {
   make -C qubes-gui-daemon DESTDIR=${pkgdir} LIBDIR=/usr/lib BACKEND_VMM=xen install
+
+  # Clean out the deprecated guid.conf cruft.
+  rm ${pkgdir}/etc/qubes/guid.conf
+  rm ${pkgdir}/usr/share/man/man1/qubes-guid.1.gz
+
+  # Remove the GUI integration autostart entries, we're using systemd.
+  rm ${pkgdir}/etc/xdg/autostart/qubes-icon-receiver.desktop
+  rm ${pkgdir}/etc/xdg/autostart/qubes-screen-layout-watches.desktop
+
+  # Remove script relating to the qubes group hack, we don't use that.
+  rm ${pkgdir}/etc/X11/xinit/xinitrc.d/qubes-localgroup.sh
+
+  find ${pkgdir} -type d -empty -delete
 }
