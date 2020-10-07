@@ -1,44 +1,77 @@
-From 56db313b700b03e0a26e599b62a003b84ac64ec3 Mon Sep 17 00:00:00 2001
+From fa1b6e14c7df6f81565dd0bac65c702317633eea Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Tue, 6 Oct 2020 08:58:44 +0200
 Subject: [PATCH] [qubesd] add support for managing qube daemons via systemd
 
 ---
- linux/systemd/Makefile              |  3 +++
- linux/systemd/qubes-db@.service     |  9 +++++++++
- linux/systemd/qubes-db@.socket      |  2 ++
- linux/systemd/qubes-qrexec@.service |  8 ++++++++
+ linux/aux-tools/Makefile            |  1 +
+ linux/aux-tools/write-qube-file.sh  |  8 ++++++++
+ linux/systemd/Makefile              |  5 +++++
+ linux/systemd/qubes-db@.service     | 10 +++++++++
+ linux/systemd/qubes-db@.socket      |  5 +++++
+ linux/systemd/qubes-qrexec@.service | 10 +++++++++
+ linux/systemd/qubes-qrexec@.socket  |  5 +++++
+ linux/systemd/qubes-qube@.service   | 10 +++++++++
  linux/systemd/qubesd.service        |  1 +
- qubes/vm/qubesvm.py                 | 29 +++++++++++++++++++++++++++--
- 6 files changed, 50 insertions(+), 2 deletions(-)
+ qubes/vm/qubesvm.py                 | 32 +++++++++++++++++++++++++++--
+ 10 files changed, 85 insertions(+), 2 deletions(-)
+ create mode 100755 linux/aux-tools/write-qube-file.sh
  create mode 100644 linux/systemd/qubes-db@.service
  create mode 100644 linux/systemd/qubes-db@.socket
  create mode 100644 linux/systemd/qubes-qrexec@.service
+ create mode 100644 linux/systemd/qubes-qrexec@.socket
+ create mode 100644 linux/systemd/qubes-qube@.service
 
+diff --git a/linux/aux-tools/Makefile b/linux/aux-tools/Makefile
+index d919c84f..04e7e158 100644
+--- a/linux/aux-tools/Makefile
++++ b/linux/aux-tools/Makefile
+@@ -6,3 +6,4 @@ install:
+ 	cp cleanup-dispvms $(DESTDIR)/usr/lib/qubes
+ 	cp startup-misc.sh $(DESTDIR)/usr/lib/qubes
+ 	cp fix-dir-perms.sh $(DESTDIR)/usr/lib/qubes/
++	cp write-qube-file.sh $(DESTDIR)/usr/lib/qubes
+diff --git a/linux/aux-tools/write-qube-file.sh b/linux/aux-tools/write-qube-file.sh
+new file mode 100755
+index 00000000..fbd0bbd9
+--- /dev/null
++++ b/linux/aux-tools/write-qube-file.sh
+@@ -0,0 +1,8 @@
++#!/bin/bash
++set -ue -o pipefail
++
++qube="${1}"
++qubefile="/run/qubes/${qube}.qube"
++
++echo "DOMID=$(qvm-prefs ${qube} xid)" > ${qubefile}
++echo "DEFAULT_USER=$(qvm-prefs ${qube} default_user)" >> ${qubefile}
 diff --git a/linux/systemd/Makefile b/linux/systemd/Makefile
-index 96f8e78c..9ebe18f7 100644
+index 96f8e78c..27fc95e3 100644
 --- a/linux/systemd/Makefile
 +++ b/linux/systemd/Makefile
-@@ -11,6 +11,9 @@ install:
+@@ -11,6 +11,11 @@ install:
  	cp qubes-qmemman.socket $(DESTDIR)$(UNITDIR)
  	cp qubesd.service $(DESTDIR)$(UNITDIR)
  	cp qubesd.socket $(DESTDIR)$(UNITDIR)
 +	cp qubes-db@.socket $(DESTDIR)$(UNITDIR)
 +	cp qubes-db@.service $(DESTDIR)$(UNITDIR)
++	cp qubes-qrexec@.socket $(DESTDIR)$(UNITDIR)
 +	cp qubes-qrexec@.service $(DESTDIR)$(UNITDIR)
++	cp qubes-qube@.service $(DESTDIR)$(UNITDIR)
  	install -d $(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d
  	install -m 0644 lvm2-pvscan@.service.d_30_qubes.conf \
  		$(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d/30_qubes.conf
 diff --git a/linux/systemd/qubes-db@.service b/linux/systemd/qubes-db@.service
 new file mode 100644
-index 00000000..bb0f7d76
+index 00000000..dc7f44f9
 --- /dev/null
 +++ b/linux/systemd/qubes-db@.service
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +[Unit]
 +Description=Qubes DB %i agent
-+After=xenstored.service
-+Requires=xenstored.service
++After=xenstored.service qubes-qube@%i.service
++Requires=xenstored.service qubes-qube@%i.service
++PartOf=qubes-qube@%i.service
 +
 +[Service]
 +EnvironmentFile=/run/qubes/%i.qube
@@ -46,26 +79,58 @@ index 00000000..bb0f7d76
 +Type=notify
 diff --git a/linux/systemd/qubes-db@.socket b/linux/systemd/qubes-db@.socket
 new file mode 100644
-index 00000000..0144ef48
+index 00000000..dbfcfcda
 --- /dev/null
 +++ b/linux/systemd/qubes-db@.socket
-@@ -0,0 +1,2 @@
+@@ -0,0 +1,5 @@
++[Unit]
++PartOf=qubes-qube@%i.service
++
 +[Socket]
 +ListenStream=/run/qubes/qubesdb.%i.sock
 diff --git a/linux/systemd/qubes-qrexec@.service b/linux/systemd/qubes-qrexec@.service
 new file mode 100644
-index 00000000..ad0cde91
+index 00000000..92bf0a00
 --- /dev/null
 +++ b/linux/systemd/qubes-qrexec@.service
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,10 @@
 +[Unit]
 +Description=Qubes qrexec agent for %i
-+After=xenstored.service
-+Requires=xenstored.service
++After=xenstored.service qubes-qube@%i.service
++Requires=xenstored.service qubes-qube@%i.service
++PartOf=qubes-qube@%i.service
 +
 +[Service]
 +EnvironmentFile=/run/qubes/%i.qube
 +ExecStart=/usr/sbin/qrexec-daemon -D $DOMID %i $DEFAULT_USER
++Type=notify
+diff --git a/linux/systemd/qubes-qrexec@.socket b/linux/systemd/qubes-qrexec@.socket
+new file mode 100644
+index 00000000..6b40bc83
+--- /dev/null
++++ b/linux/systemd/qubes-qrexec@.socket
+@@ -0,0 +1,5 @@
++[Unit]
++PartOf=qubes-qube@%i.service
++
++[Socket]
++ListenStream=/run/qubes/qrexec.%i
+diff --git a/linux/systemd/qubes-qube@.service b/linux/systemd/qubes-qube@.service
+new file mode 100644
+index 00000000..8cfac8b0
+--- /dev/null
++++ b/linux/systemd/qubes-qube@.service
+@@ -0,0 +1,10 @@
++[Unit]
++After=qubes-db@%i.socket qubes-qrexec@%i.socket
++Requires=qubes-db@%i.socket qubes-qrexec@%i.socket
++Wants=qubes-db@%i.service qubes-qrexec@%i.service
++
++[Service]
++Type=oneshot
++ExecStart=/usr/lib/qubes/write-qube-file.sh %i
++ExecStop=rm /run/qubes/%i.qube
++RemainAfterExit=yes
 diff --git a/linux/systemd/qubesd.service b/linux/systemd/qubesd.service
 index 40e4779d..3726f141 100644
 --- a/linux/systemd/qubesd.service
@@ -79,7 +144,7 @@ index 40e4779d..3726f141 100644
  ExecStart=/usr/bin/qubesd
  KillMode=process
 diff --git a/qubes/vm/qubesvm.py b/qubes/vm/qubesvm.py
-index 50761760..3bcce994 100644
+index 50761760..23712c71 100644
 --- a/qubes/vm/qubesvm.py
 +++ b/qubes/vm/qubesvm.py
 @@ -31,6 +31,7 @@ import string
@@ -90,12 +155,11 @@ index 50761760..3bcce994 100644
  import libvirt  # pylint: disable=import-error
  import lxml
  
-@@ -1202,15 +1203,39 @@ class QubesVM(qubes.vm.mix.net.NetVMMixin, qubes.vm.BaseVM):
+@@ -1202,15 +1203,32 @@ class QubesVM(qubes.vm.mix.net.NetVMMixin, qubes.vm.BaseVM):
                  yield from self.fire_event_async('domain-spawn',
                                                   start_guid=start_guid)
  
 +                systemd_daemons = 'SYSTEMD_DAEMONS' in os.environ
-+
 +                if systemd_daemons:
 +                    self.log.info('Starting qube daemons with systemd')
 +                    bus = dbus.SystemBus()
@@ -103,17 +167,11 @@ index 50761760..3bcce994 100644
 +                        '/org/freedesktop/systemd1')
 +                    manager = dbus.Interface(systemd,
 +                        'org.freedesktop.systemd1.Manager')
-+                    f = open('/run/qubes/{}.qube'.format(self.name), 'w')
-+                    f.write('DOMID={}\n'.format(self.xid))
-+                    f.write('DEFAULT_USER={}\n'.format(self.default_user))
-+                    if not self.features.check_with_template('qrexec', False):
-+                        f.write('QREXEC_STARTUP_NOWAIT=1\n')
-+                    else:
-+                        f.write('QREXEC_STARTUP_TIMEOUT={}\n'.format(str(
-+                            self.qrexec_timeout)))
-+                    f.close()
-+                    manager.StartUnit('qubes-db@{}.socket'.format(self.name), 'replace')
-+                    manager.StartUnit('qubes-qrexec@{}.service'.format(self.name), 'replace')
++                    job = manager.StartUnit(
++                        'qubes-qube@{}.service'.format(self.name), 'replace')
++                    # Wait for job to complete.
++                    # TODO: not like this tho.
++                    yield from asyncio.sleep(1)
 +
 +
                  self.log.info('Setting Qubes DB info for the VM')
@@ -132,6 +190,23 @@ index 50761760..3bcce994 100644
  
                  yield from self.fire_event_async('domain-start',
                                                   start_guid=start_guid)
+@@ -1301,6 +1319,16 @@ class QubesVM(qubes.vm.mix.net.NetVMMixin, qubes.vm.BaseVM):
+             yield from self.fire_event_async('domain-pre-shutdown',
+                                              pre_event=True, force=force)
+ 
++            if 'SYSTEMD_DAEMONS' in os.environ:
++                self.log.info('Starting qube daemons with systemd')
++                bus = dbus.SystemBus()
++                systemd = bus.get_object('org.freedesktop.systemd1',
++                    '/org/freedesktop/systemd1')
++                manager = dbus.Interface(systemd,
++                    'org.freedesktop.systemd1.Manager')
++                manager.StopUnit(
++                    'qubes-qube@{}.service'.format(self.name), 'replace')
++
+             self.libvirt_domain.shutdown()
+ 
+             if wait:
 -- 
 2.28.0
 
