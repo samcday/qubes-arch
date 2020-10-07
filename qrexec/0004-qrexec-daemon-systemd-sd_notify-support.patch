@@ -1,0 +1,30 @@
+From 9fa00a812ca1075bb52db7fa524872f1e58c560c Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Tue, 6 Oct 2020 09:48:52 +0200
+Subject: [PATCH] [qrexec-daemon] systemd sd_notify support
+
+---
+ daemon/qrexec-daemon.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/daemon/qrexec-daemon.c b/daemon/qrexec-daemon.c
+index 25e2bca..4d6af09 100644
+--- a/daemon/qrexec-daemon.c
++++ b/daemon/qrexec-daemon.c
+@@ -1161,6 +1161,13 @@ int main(int argc, char **argv)
+     sigprocmask(SIG_BLOCK, &selectmask, NULL);
+     sigemptyset(&selectmask);
+ 
++
++#ifdef HAVE_SYSTEMD
++    if (getenv("NOTIFY_SOCKET")) {
++        sd_notify(1, "READY=1");
++    }
++#endif
++
+     /*
+      * The main event loop. Waits for one of the following events:
+      * - message from client
+-- 
+2.28.0
+

@@ -1,0 +1,79 @@
+From bc31011d31715b4ae96f717be858ad9624a01d18 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Mon, 5 Oct 2020 22:36:30 +0200
+Subject: [PATCH] [qrexec-daemon] socket activation support
+
+---
+ daemon/Makefile        | 15 +++++++++++----
+ daemon/qrexec-daemon.c | 14 +++++++++++---
+ 2 files changed, 22 insertions(+), 7 deletions(-)
+
+diff --git a/daemon/Makefile b/daemon/Makefile
+index c6f4380..03a06d3 100644
+--- a/daemon/Makefile
++++ b/daemon/Makefile
+@@ -1,10 +1,17 @@
+ CC ?=gcc
+-override QUBES_CFLAGS:=-I../libqrexec -g -O2 -Wall -Wextra -Werror -pie -fPIC \
++SYSTEMD ?= 1
++QUBES_CFLAGS:=-I../libqrexec -g -O2 -Wall -Wextra -Werror -pie -fPIC \
+    $(shell pkg-config --cflags vchan-$(BACKEND_VMM)) -fstack-protector \
+    -D_FORTIFY_SOURCE=2 -fstack-protector-strong -std=gnu11 -D_POSIX_C_SOURCE=200809L \
+    -D_GNU_SOURCE $(CFLAGS)
+-override LDFLAGS += -pie -Wl,-z,relro,-z,now -L../libqrexec
+-override LDLIBS += $(shell pkg-config --libs vchan-$(BACKEND_VMM)) -lqrexec-utils
++LDFLAGS += -pie -Wl,-z,relro,-z,now -L../libqrexec
++LDLIBS += $(shell pkg-config --libs vchan-$(BACKEND_VMM)) -lqrexec-utils
++
++ifeq ($(SYSTEMD),1)
++QUBES_CFLAGS += `pkg-config --cflags libsystemd || pkg-config --cflags libsystemd-daemon`
++QUBES_CFLAGS += -DHAVE_SYSTEMD
++LDLIBS += `pkg-config --libs libsystemd || pkg-config --libs libsystemd-daemon`
++endif
+ 
+ BINDIR ?= /usr/bin
+ LIBDIR ?= /usr/lib
+@@ -25,7 +32,7 @@ install: all
+ .PHONY: all clean install
+ 
+ qrexec-daemon qrexec-client: %: %.o
+-	$(CC) $(LDFLAGS) -pie -g -o $@ $< $(LDLIBS)
++	$(CC) $(LDFLAGS) -pie -g -o $@ $(QUBES_CFLAGS) $< $(LDLIBS)
+ 
+ %.o: %.c
+ 	$(CC) $< -c -o $@ $(QUBES_CFLAGS) -MD -MP -MF $@.dep
+diff --git a/daemon/qrexec-daemon.c b/daemon/qrexec-daemon.c
+index f82a4fd..25e2bca 100644
+--- a/daemon/qrexec-daemon.c
++++ b/daemon/qrexec-daemon.c
+@@ -37,6 +37,10 @@
+ #include "qrexec.h"
+ #include "libqrexec-utils.h"
+ 
++#ifdef HAVE_SYSTEMD
++#include <systemd/sd-daemon.h>
++#endif
++
+ #define QREXEC_MIN_VERSION QREXEC_PROTOCOL_V2
+ #define QREXEC_SOCKET_PATH "/var/run/qubes/policy.sock"
+ 
+@@ -356,9 +360,13 @@ void init(int xid)
+         vchan_port_notify_client[i] = VCHAN_PORT_UNUSED;
+     }
+ 
+-    atexit(unlink_qrexec_socket);
+-    qrexec_daemon_unix_socket_fd =
+-        create_qrexec_socket(xid, remote_domain_name);
++    if (sd_listen_fds(0) == 1) {
++        qrexec_daemon_unix_socket_fd = SD_LISTEN_FDS_START + 0;
++    } else {
++        atexit(unlink_qrexec_socket);
++        qrexec_daemon_unix_socket_fd =
++            create_qrexec_socket(xid, remote_domain_name);
++    }
+ 
+     signal(SIGPIPE, SIG_IGN);
+     signal(SIGCHLD, sigchld_handler);
+-- 
+2.28.0
+

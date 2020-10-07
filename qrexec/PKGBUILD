@@ -25,10 +25,16 @@ source=(
   "git+https://github.com/qubesos/qubes-core-qrexec?tag=v${pkgver}"
   0001-Change-install-targets-to-use-BINDIR-SBINDIR-LIBDIR.patch
   0002-qrexec-policy-daemon-systemd-improvements.patch
+  0003-qrexec-daemon-socket-activation-support.patch
+  0004-qrexec-daemon-systemd-sd_notify-support.patch
+  0005-qrexec-daemon-systemd-journald-native-logging-suppor.patch
   )
 sha512sums=('SKIP'
-            'd12ffc9be227cf76ae4bebfc6d6019392b0f0ab0d9f16995d10b5ad9e2b686a600b25c305c3d3c2fc069fba4645327bbc7e1b58dc404a8a683d26de6bf12fdaa'
-            'c29e18e6616742614499676fbbf7c0ef39f31243a9ba9194fbbe273dc01980bf84500fe777afd3c9e72345a6f006c83a77913953f2abe9aa35556d6bf8296a02')
+            '18e5280b12a79ee1b2dc1ad2e02a993d09194f48d5505cc9d025b380807e8e4c10a3157de387b6234b8b32adb99261edc96be7cc4e4e6f8d48c5e53888944ebe'
+            'b947b0d254799395a91a5db8308d8ca02df2bf885740769b47169059c1b587fc775b62d828a4ffc6d975cf613d4e2224003846b79475401a81fd93bab9d9601d'
+            '99dd55e14aa02a75707807e165aa54e56b75723be12dc8f8d6d04f5a6628494ed18853274d0916e66ec81921a3d322b2bb86f84c8a89dc3c9b48b69ff8a6aef1'
+            'd4b0d23b652ff386c71ef340a44b04268932f770dd7bd8b76b101608f7e019f796dab706cfe78c92b67595f71d28606581f087a5c7746c9d1a05d978407e1266'
+            '34c5f2195fb3d92ef235f32238d28add3ab8ea6a488c895fb7187e5b8a563a26436ac7df3081456e0d63b139cba7ccbb01fb4b05f1bb5e8e59a7ff202d35d65f')
 
 prepare() {
   git -C ${srcdir}/qubes-core-qrexec am ${srcdir}/*.patch
