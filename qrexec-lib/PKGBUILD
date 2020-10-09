@@ -6,7 +6,10 @@ pkgdesc="https://github.com/qubesos/qubes-linux-utils"
 arch=(x86_64)
 url="https://github.com/qubesos/qubes-linux-utils"
 license=('GPL')
-depends=()
+depends=(
+	python-numpy
+	python-pillow
+	)
 makedepends=()
 optdepends=()
 source=(
@@ -16,8 +19,10 @@ sha512sums=('SKIP')
 
 build() {
   make -C ${srcdir}/qubes-linux-utils/qrexec-lib all
+  make -C ${srcdir}/qubes-linux-utils/imgconverter all
 }
 
 package() {
   make -C ${srcdir}/qubes-linux-utils/qrexec-lib DESTDIR=${pkgdir} INCLUDEDIR=/usr/include LIBDIR=/usr/lib install
+  make -C ${srcdir}/qubes-linux-utils/imgconverter DESTDIR=${pkgdir} install
 }
