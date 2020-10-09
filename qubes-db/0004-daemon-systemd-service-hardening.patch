@@ -1,0 +1,54 @@
+From 2f79a7a6ef9389faa875c6ea683e0314e9e95746 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Fri, 9 Oct 2020 16:58:22 +0200
+Subject: [PATCH] [daemon] systemd service hardening
+
+ * applied all mitigations listed in `systemd-analyze security`
+---
+ daemon/qubes-db.service | 26 +++++++++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/daemon/qubes-db.service b/daemon/qubes-db.service
+index 2d00936..876123b 100644
+--- a/daemon/qubes-db.service
++++ b/daemon/qubes-db.service
+@@ -1,11 +1,35 @@
+ [Unit]
+ Description=Qubes DB agent
+-After=xenstored.service
++After=xenstored.service qubes-db.socket
+ Requires=xenstored.service
++BindsTo=qubes-db.socket
+ 
+ [Service]
+ ExecStart=/usr/sbin/qubesdb-daemon
+ Type=notify
+ 
++DynamicUser=yes
++CapabilityBoundingSet=
++RestrictAddressFamilies=AF_UNIX
++RestrictNamespaces=yes
++IPAddressDeny=any
++PrivateDevices=yes
++PrivateNetwork=yes
++PrivateUsers=yes
++ProtectClock=yes
++ProtectControlGroups=yes
++ProtectHome=yes
++ProtectHostname=yes
++ProtectKernelLogs=yes
++ProtectKernelModules=yes
++ProtectKernelTunables=yes
++SystemCallFilter=~@clock @debug @module @mount @raw @reboot @swap @privileged @resources @cpu-emulation @obsolete
++SystemCallErrorNumber=EPERM
++RestrictRealtime=yes
++LockPersonality=yes
++MemoryDenyWriteExecute=yes
++SystemCallArchitectures=native
++UMask=077
++
+ [Install]
+ WantedBy=sysinit.target
+-- 
+2.28.0
+

@@ -1,35 +1,43 @@
-From e99de0032323391e18ecb4c3cc5f93c7749b3401 Mon Sep 17 00:00:00 2001
+From 57514d119e52bc0a0cc762cdeaf339a4edc2271d Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 21:51:15 +0200
-Subject: [PATCH 2/3] add support for systemd socket activation
+Subject: [PATCH] [daemon] systemd socket activation support
 
 ---
- daemon/db-daemon.c          | 8 ++++++++
+ daemon/db-daemon.c          | 9 +++++++--
  daemon/qubes-db-dom0.socket | 6 ++++++
  daemon/qubes-db.socket      | 5 +++++
- 3 files changed, 19 insertions(+)
+ 3 files changed, 18 insertions(+), 2 deletions(-)
  create mode 100644 daemon/qubes-db-dom0.socket
  create mode 100644 daemon/qubes-db.socket
 
 diff --git a/daemon/db-daemon.c b/daemon/db-daemon.c
-index 5f7e543..d4ee08b 100644
+index 5f7e543..40f3093 100644
 --- a/daemon/db-daemon.c
 +++ b/daemon/db-daemon.c
-@@ -482,6 +482,14 @@ int mainloop(struct db_daemon_data *d) {
+@@ -765,7 +765,11 @@ int fuzz_main(int argc, char **argv) {
+         exit(1);
+     }
  
- #define MAX_FILE_PATH 256
- int init_server_socket(struct db_daemon_data *d) {
-+#if HAVE_SYSTEMD
-+    if (sd_listen_fds(0) == 1) {
+-    if (!init_server_socket(&d)) {
++    int systemd_socket = under_systemd && (sd_listen_fds(0) == 1);
++    if (systemd_socket) {
 +        fprintf(stderr, "accepting socket from systemd\n");
-+        d->socket_fd = SD_LISTEN_FDS_START + 0;
-+        return 1;
-+    }
-+#endif
-+
-     char socket_address[MAX_FILE_PATH];
-     struct sockaddr_un sockname;
-     int s;
++        d.socket_fd = SD_LISTEN_FDS_START + 0;
++    } else if (!init_server_socket(&d)) {
+         fprintf(stderr, "FATAL: server socket initialization failed\n");
+         exit(1);
+     }
+@@ -827,7 +831,8 @@ int fuzz_main(int argc, char **argv) {
+     if (d.vchan)
+         libvchan_close(d.vchan);
+ 
+-    close_server_socket(&d);
++    if (!systemd_socket)
++        close_server_socket(&d);
+ 
+ #ifndef WIN32
+     if (!under_systemd) {
 diff --git a/daemon/qubes-db-dom0.socket b/daemon/qubes-db-dom0.socket
 new file mode 100644
 index 0000000..699349c

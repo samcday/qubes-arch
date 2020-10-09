@@ -1,24 +1,23 @@
-From 1fb775a069ff7950f93e4a82abdbc45d113b465d Mon Sep 17 00:00:00 2001
+From 4bd4790382696a1b744a3607bb91d1522fe5e57c Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 4 Oct 2020 21:52:03 +0200
-Subject: [PATCH 3/3] simplify service management
+Subject: [PATCH] [daemon] simplify systemd service management
 
- * Nuke dom0 specific service.
- * Instead, manage dom0/domU daemons with the same main service.
+Unify the service for main dom0/domU daemons into one systemd unit.
 ---
  daemon/db-daemon.c           | 17 ++++++++++-------
- daemon/qubes-db-dom0.service | 13 -------------
+ daemon/qubes-db-dom0.service | 12 ------------
  daemon/qubes-db-dom0.socket  |  6 ------
  daemon/qubes-db.service      |  3 +--
- 4 files changed, 11 insertions(+), 28 deletions(-)
+ 4 files changed, 11 insertions(+), 27 deletions(-)
  delete mode 100644 daemon/qubes-db-dom0.service
  delete mode 100644 daemon/qubes-db-dom0.socket
 
 diff --git a/daemon/db-daemon.c b/daemon/db-daemon.c
-index d4ee08b..37d5497 100644
+index 40f3093..b2cacaf 100644
 --- a/daemon/db-daemon.c
 +++ b/daemon/db-daemon.c
-@@ -657,8 +657,8 @@ void close_server_socket(struct db_daemon_data *d) {
+@@ -649,8 +649,8 @@ void close_server_socket(struct db_daemon_data *d) {
  #endif // !WIN32
  
  void usage(char *argv0) {
@@ -29,7 +28,7 @@ index d4ee08b..37d5497 100644
  }
  
  #ifdef WIN32
-@@ -698,18 +698,21 @@ int fuzz_main(int argc, char **argv) {
+@@ -690,18 +690,21 @@ int fuzz_main(int argc, char **argv) {
      under_systemd = getenv("NOTIFY_SOCKET") != NULL;
  #endif
  
@@ -58,17 +57,16 @@ index d4ee08b..37d5497 100644
       * sucessful start */
 diff --git a/daemon/qubes-db-dom0.service b/daemon/qubes-db-dom0.service
 deleted file mode 100644
-index b912ec5..0000000
+index edbaf5b..0000000
 --- a/daemon/qubes-db-dom0.service
 +++ /dev/null
-@@ -1,13 +0,0 @@
+@@ -1,12 +0,0 @@
 -[Unit]
 -Description=Qubes DB agent
 -After=xenstored.service
 -Requires=xenstored.service
 -
 -[Service]
--RuntimeDirectory=qubes
 -# Both agent and daemon for dom0
 -ExecStart=/usr/sbin/qubesdb-daemon 0 dom0
 -Type=notify
@@ -88,13 +86,13 @@ index 699349c..0000000
 -[Install]
 -WantedBy=sockets.target
 diff --git a/daemon/qubes-db.service b/daemon/qubes-db.service
-index d460e48..8131533 100644
+index 1862a6e..2d00936 100644
 --- a/daemon/qubes-db.service
 +++ b/daemon/qubes-db.service
-@@ -5,8 +5,7 @@ Requires=xenstored.service
+@@ -4,8 +4,7 @@ After=xenstored.service
+ Requires=xenstored.service
  
  [Service]
- RuntimeDirectory=qubes
 -# Remote Dom ID as an argument
 -ExecStart=/usr/sbin/qubesdb-daemon 0
 +ExecStart=/usr/sbin/qubesdb-daemon

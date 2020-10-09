@@ -12,14 +12,16 @@ install=qubes-db.install
 
 source=(
   "git+https://github.com/qubesos/qubes-core-qubesdb?tag=v${pkgver}"
-  0001-Make-qubes-db-more-like-a-systemd-new-style-daemon.patch
-  0002-add-support-for-systemd-socket-activation.patch
-  0003-simplify-service-management.patch
+  0001-daemon-systemd-new-style-daemon-changes.patch
+  0002-daemon-systemd-socket-activation-support.patch
+  0003-daemon-simplify-systemd-service-management.patch
+  0004-daemon-systemd-service-hardening.patch
   )
 sha512sums=('SKIP'
-            'f9176a2e68fb4383ef6545240de948b1b1ed3d6f8079e045b247853ac87e95a76efee8973d07dd410a27462e3cb197ecfb3144cb2caef8558b7342ad226103b3'
-            'bdb792120e5605852dd7d89108b5a0b5a5d28af8b2800075ac2142ad03ef349c3522ba0340a0181804c382b262292839a32a6906f4a14533fb07abfe96e755dd'
-            'ca0c57372842f052a6c35884d0acc970e183f6c36a15f9502816d28d01c21b8cd219845efa352c1864e8a15a1eab1db2c7ade1959fc3000c84f54bcb8fc77bb7')
+            'c069911f7b2cebda81e87dd212e4362015f19b3b9e0be03264594fdaac461ca4a3c342a6bf636f1c57d617a318397531a082d578f7c6e6220f42d575899e78e7'
+            '96611bc643e36c76b3065d3309072d7946e7c5e1dc1a085b3e0db4913047dfa611e4d77649f4a4ad0209c1b99d94d756923add507b451a0f1c183605d47915cb'
+            '02fe7f78b7b54570edfe466f381e43f4e7ddbef7f0e643a4813e9e2a260b50c9f50dc50f61be46f153c5e19154138727073377900cd4e3ab7c51ecfeffe10935'
+            '1beeb1804cafe72ef084760388f4c0fe2b080f7d00cdcd492323df9c523486259ab9f8f7c622fce6319a38215ac60259a811cdb8d2622d9b76ba4eab32015096')
 
 prepare() {
   {
