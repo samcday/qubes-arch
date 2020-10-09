@@ -1,0 +1,7 @@
+post_install() {
+	systemctl enable --now qubes-icon-receiver.socket
+}
+
+pre_remove() {
+	systemctl disable --now qubes-icon-receiver.socket
+}

@@ -8,22 +8,31 @@ url="https://github.com/QubesOS/qubes-gui-daemon"
 license=('GPL')
 depends=(
   libconfig
+  libnotify
   libpng
   libvchan-xen
+  python-systemd
   python-xcffib
   qrexec
   socat
   xorg-server
   )
 makedepends=(
-
+  help2man
   )
 source=(
   "git+https://github.com/qubesos/qubes-gui-daemon?tag=${pkgver}"
+  xinit-allow-root.sh
+  0001-window-icon-update-systemd-socket-activation-support.patch
   )
-sha512sums=(
-  'SKIP'
-  )
+sha512sums=('SKIP'
+            'f68b48986398c3f3f3aebf1b3f81ad81601aabcb39cc0e496a96f1181a56da985e67e1b1c2a016e3d3a06e3a3fb10c6df8d1c5cd284fe8a84c4669bf4a1636a7'
+            'a4a381ee3be9b42bdf562a851c43586e5e628495c30b1dc30d510da3b3bd6b6479f4c4095a2d446316366313bac05e5539876cb83bda99c9ae2cbdad68b23c58')
+install=qubes-gui-dom0.install
+
+prepare() {
+  git -C ${srcdir}/qubes-gui-daemon am ${srcdir}/*.patch
+}
 
 build() {
   make -C qubes-gui-daemon BACKEND_VMM=xen all
@@ -33,8 +42,7 @@ package() {
   make -C qubes-gui-daemon DESTDIR=${pkgdir} LIBDIR=/usr/lib BACKEND_VMM=xen install
 
   # Clean out the deprecated guid.conf cruft.
-  rm ${pkgdir}/etc/qubes/guid.conf
-  rm ${pkgdir}/usr/share/man/man1/qubes-guid.1.gz
+  # rm ${pkgdir}/etc/qubes/guid.conf
 
   # Remove the GUI integration autostart entries, we're using systemd.
   rm ${pkgdir}/etc/xdg/autostart/qubes-icon-receiver.desktop
@@ -43,5 +51,6 @@ package() {
   # Remove script relating to the qubes group hack, we don't use that.
   rm ${pkgdir}/etc/X11/xinit/xinitrc.d/qubes-localgroup.sh
 
+  install -m 0755 -D ${srcdir}/xinit-allow-root.sh ${pkgdir}/etc/X11/xinit/xinitrc.d/qubes-xinit-allow-root.sh
   find ${pkgdir} -type d -empty -delete
 }

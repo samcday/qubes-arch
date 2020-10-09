@@ -1,0 +1,88 @@
+From f106689e0d644b0daef05280d74245c5503ed5ac Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Fri, 9 Oct 2020 10:14:32 +0200
+Subject: [PATCH] [window-icon-update] systemd socket activation support
+
+---
+ window-icon-updater/Makefile                   |  2 ++
+ window-icon-updater/icon-receiver              | 18 ++++++++++++++----
+ .../qubes-icon-receiver.service                |  6 ++++++
+ window-icon-updater/qubes-icon-receiver.socket |  6 ++++++
+ 4 files changed, 28 insertions(+), 4 deletions(-)
+ create mode 100644 window-icon-updater/qubes-icon-receiver.service
+ create mode 100644 window-icon-updater/qubes-icon-receiver.socket
+
+diff --git a/window-icon-updater/Makefile b/window-icon-updater/Makefile
+index 0b6eb3d..678524e 100644
+--- a/window-icon-updater/Makefile
++++ b/window-icon-updater/Makefile
+@@ -8,3 +8,5 @@ install:
+ 	install -d $(DESTDIR)/etc/qubes/rpc-config
+ 	install -m 0664 -D qubes.WindowIconUpdater.config $(DESTDIR)/etc/qubes/rpc-config/qubes.WindowIconUpdater
+ 	install -m 0664 -D qubes-icon-receiver.desktop $(DESTDIR)/etc/xdg/autostart/qubes-icon-receiver.desktop
++	install -m 0644 -D qubes-icon-receiver.service $(DESTDIR)/usr/lib/systemd/system/qubes-icon-receiver.service
++	install -m 0644 -D qubes-icon-receiver.socket $(DESTDIR)/usr/lib/systemd/system/qubes-icon-receiver.socket
+diff --git a/window-icon-updater/icon-receiver b/window-icon-updater/icon-receiver
+index 3577f58..6e90eea 100755
+--- a/window-icon-updater/icon-receiver
++++ b/window-icon-updater/icon-receiver
+@@ -28,7 +28,9 @@ import asyncio
+ import argparse
+ from qubesimgconverter import ICON_MAXSIZE, Image
+ import logging
++import socket
+ 
++import systemd.daemon
+ import xcffib as xcb
+ import xcffib.xproto as xproto
+ from qubesadmin import Qubes
+@@ -332,10 +334,18 @@ class IconReceiver(object):
+         self.icon_cache = self.icon_cache[:5]
+ 
+     async def handle_clients(self, socket_path=SOCKET_PATH):
+-        if os.path.exists(socket_path):
+-            os.unlink(socket_path)
+-        server = await asyncio.start_unix_server(
+-            self.handle_client, socket_path)
++        if systemd.daemon.booted():
++            fds = systemd.daemon.listen_fds()
++            if fds:
++                sock = socket.fromfd(fds[0], socket.AF_UNIX,
++                    socket.SOCK_STREAM)
++                server = await asyncio.start_unix_server(
++                self.handle_client, sock=sock)
++        if not server:
++            if os.path.exists(socket_path):
++                os.unlink(socket_path)
++            server = await asyncio.start_unix_server(
++                self.handle_client, socket_path)
+         await server.serve_forever()
+ 
+     async def handle_client(self, reader, writer):
+diff --git a/window-icon-updater/qubes-icon-receiver.service b/window-icon-updater/qubes-icon-receiver.service
+new file mode 100644
+index 0000000..2a9b2be
+--- /dev/null
++++ b/window-icon-updater/qubes-icon-receiver.service
+@@ -0,0 +1,6 @@
++[Unit]
++PartOf=qubes-session.target
++
++[Service]
++Environment=DISPLAY=:0
++ExecStart=/usr/lib/qubes/icon-receiver
+diff --git a/window-icon-updater/qubes-icon-receiver.socket b/window-icon-updater/qubes-icon-receiver.socket
+new file mode 100644
+index 0000000..7d9da3e
+--- /dev/null
++++ b/window-icon-updater/qubes-icon-receiver.socket
+@@ -0,0 +1,6 @@
++[Socket]
++ListenStream=/run/qubes/icon-receiver.sock
++PartOf=qubes-session.target
++
++[Install]
++WantedBy=qubes-session.target
+-- 
+2.28.0
+
