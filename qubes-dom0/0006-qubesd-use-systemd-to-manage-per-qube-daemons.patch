@@ -1,42 +1,73 @@
-From fa1b6e14c7df6f81565dd0bac65c702317633eea Mon Sep 17 00:00:00 2001
+From 7888509bb70e487525eb676fb99140bd13eb988b Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Tue, 6 Oct 2020 08:58:44 +0200
-Subject: [PATCH] [qubesd] add support for managing qube daemons via systemd
+Subject: [PATCH] [qubesd] use systemd to manage per-qube daemons
 
+ * qubesd triggers start/stop via systemd DBus API
+ * user-level systemd units to properly bind lifecycle of X session dependent
+   units to the running state of an X session
+ * Polkit policy to allow the user level service to manage the system-level
+   services appropriately.
 ---
- linux/aux-tools/Makefile            |  1 +
- linux/aux-tools/write-qube-file.sh  |  8 ++++++++
- linux/systemd/Makefile              |  5 +++++
- linux/systemd/qubes-db@.service     | 10 +++++++++
- linux/systemd/qubes-db@.socket      |  5 +++++
- linux/systemd/qubes-qrexec@.service | 10 +++++++++
- linux/systemd/qubes-qrexec@.socket  |  5 +++++
- linux/systemd/qubes-qube@.service   | 10 +++++++++
- linux/systemd/qubesd.service        |  1 +
- qubes/vm/qubesvm.py                 | 32 +++++++++++++++++++++++++++--
- 10 files changed, 85 insertions(+), 2 deletions(-)
+ linux/aux-tools/Makefile                      |  2 ++
+ linux/aux-tools/start-guids.sh                |  6 ++++
+ linux/aux-tools/write-qube-file.sh            | 10 ++++++
+ linux/system-config/Makefile                  |  5 +++
+ .../qubes_start_qubes-session-target.rules    | 11 +++++++
+ linux/systemd/Makefile                        | 11 +++++++
+ linux/systemd/bind-qubes-session.service      |  9 ++++++
+ linux/systemd/qubes-db@.service               | 10 ++++++
+ linux/systemd/qubes-db@.socket                |  5 +++
+ linux/systemd/qubes-guid.service              |  8 +++++
+ linux/systemd/qubes-guid@.service             | 11 +++++++
+ linux/systemd/qubes-qrexec@.service           | 10 ++++++
+ linux/systemd/qubes-qrexec@.socket            |  5 +++
+ linux/systemd/qubes-qube@.service             | 10 ++++++
+ linux/systemd/qubes-session.target            |  3 ++
+ linux/systemd/qubesd.service                  |  1 +
+ qubes/vm/qubesvm.py                           | 32 +++++++++++++++++--
+ 17 files changed, 147 insertions(+), 2 deletions(-)
+ create mode 100755 linux/aux-tools/start-guids.sh
  create mode 100755 linux/aux-tools/write-qube-file.sh
+ create mode 100644 linux/system-config/qubes_start_qubes-session-target.rules
+ create mode 100644 linux/systemd/bind-qubes-session.service
  create mode 100644 linux/systemd/qubes-db@.service
  create mode 100644 linux/systemd/qubes-db@.socket
+ create mode 100644 linux/systemd/qubes-guid.service
+ create mode 100644 linux/systemd/qubes-guid@.service
  create mode 100644 linux/systemd/qubes-qrexec@.service
  create mode 100644 linux/systemd/qubes-qrexec@.socket
  create mode 100644 linux/systemd/qubes-qube@.service
+ create mode 100644 linux/systemd/qubes-session.target
 
 diff --git a/linux/aux-tools/Makefile b/linux/aux-tools/Makefile
-index d919c84f..04e7e158 100644
+index d919c84f..270ace0d 100644
 --- a/linux/aux-tools/Makefile
 +++ b/linux/aux-tools/Makefile
-@@ -6,3 +6,4 @@ install:
+@@ -6,3 +6,5 @@ install:
  	cp cleanup-dispvms $(DESTDIR)/usr/lib/qubes
  	cp startup-misc.sh $(DESTDIR)/usr/lib/qubes
  	cp fix-dir-perms.sh $(DESTDIR)/usr/lib/qubes/
 +	cp write-qube-file.sh $(DESTDIR)/usr/lib/qubes
++	cp start-guids.sh $(DESTDIR)/usr/lib/qubes
+diff --git a/linux/aux-tools/start-guids.sh b/linux/aux-tools/start-guids.sh
+new file mode 100755
+index 00000000..b1a956fe
+--- /dev/null
++++ b/linux/aux-tools/start-guids.sh
+@@ -0,0 +1,6 @@
++#!/bin/bash
++set -uex -o pipefail
++
++for qube in $(qvm-ls --raw-list --running | grep -v ^dom0$); do
++	systemctl start qubes-guid@${qube}.service
++done
 diff --git a/linux/aux-tools/write-qube-file.sh b/linux/aux-tools/write-qube-file.sh
 new file mode 100755
-index 00000000..fbd0bbd9
+index 00000000..149f5573
 --- /dev/null
 +++ b/linux/aux-tools/write-qube-file.sh
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,10 @@
 +#!/bin/bash
 +set -ue -o pipefail
 +
@@ -45,11 +76,50 @@ index 00000000..fbd0bbd9
 +
 +echo "DOMID=$(qvm-prefs ${qube} xid)" > ${qubefile}
 +echo "DEFAULT_USER=$(qvm-prefs ${qube} default_user)" >> ${qubefile}
++echo "QUBE_LABEL=$(qvm-prefs ${qube} label)" >> ${qubefile}
++echo "QUBE_ICON=$(qvm-prefs ${qube} icon)" >> ${qubefile}
+diff --git a/linux/system-config/Makefile b/linux/system-config/Makefile
+index 79f1354f..3038c8a6 100644
+--- a/linux/system-config/Makefile
++++ b/linux/system-config/Makefile
+@@ -8,6 +8,8 @@ tmpfiles-qubes.conf: tmpfiles-qubes.conf.in
+ 	cat tmpfiles-qubes.conf.in | sed "s#@STATEDIR@#$(STATEDIR)#" > tmpfiles-qubes.conf
+ install: tmpfiles-qubes.conf
+ 	mkdir -p $(DESTDIR)/etc/xen/scripts
++	chmod 710 $(DESTDIR)/etc/xen
++	chmod 755 $(DESTDIR)/etc/xen/scripts
+ 	cp vif-route-qubes $(DESTDIR)/etc/xen/scripts
+ 	cp block-snapshot $(DESTDIR)/etc/xen/scripts
+ 	ln -s block-snapshot $(DESTDIR)/etc/xen/scripts/block-origin
+@@ -15,3 +17,6 @@ install: tmpfiles-qubes.conf
+ 	install -d $(DESTDIR)/etc/logrotate.d
+ 	install -m 0644 logrotate-qubes \
+ 		$(DESTDIR)/etc/logrotate.d/qubes
++
++	mkdir -p -m 750 $(DESTDIR)/usr/share/polkit-1/rules.d
++	install -m 0644 qubes_start_qubes-session-target.rules $(DESTDIR)/usr/share/polkit-1/rules.d/qubes_start_qubes-session-target.rules
+diff --git a/linux/system-config/qubes_start_qubes-session-target.rules b/linux/system-config/qubes_start_qubes-session-target.rules
+new file mode 100644
+index 00000000..51fe998a
+--- /dev/null
++++ b/linux/system-config/qubes_start_qubes-session-target.rules
+@@ -0,0 +1,11 @@
++// This policy allows the user session to trigger services in the
++// system systemd manager.
++polkit.addRule(function(action, subject) {
++  if (
++    action.id == 'org.freedesktop.systemd1.manage-units' &&
++    action.lookup('unit') == 'qubes-session.target' &&
++    ['start', 'stop', 'restart'].indexOf(action.lookup('verb')) > -1
++  ) {
++    return polkit.Result.YES;
++  }
++});
 diff --git a/linux/systemd/Makefile b/linux/systemd/Makefile
-index 96f8e78c..27fc95e3 100644
+index 96f8e78c..ed52fece 100644
 --- a/linux/systemd/Makefile
 +++ b/linux/systemd/Makefile
-@@ -11,6 +11,11 @@ install:
+@@ -11,6 +11,17 @@ install:
  	cp qubes-qmemman.socket $(DESTDIR)$(UNITDIR)
  	cp qubesd.service $(DESTDIR)$(UNITDIR)
  	cp qubesd.socket $(DESTDIR)$(UNITDIR)
@@ -58,9 +128,30 @@ index 96f8e78c..27fc95e3 100644
 +	cp qubes-qrexec@.socket $(DESTDIR)$(UNITDIR)
 +	cp qubes-qrexec@.service $(DESTDIR)$(UNITDIR)
 +	cp qubes-qube@.service $(DESTDIR)$(UNITDIR)
++	cp qubes-guid.service $(DESTDIR)$(UNITDIR)
++	cp qubes-guid@.service $(DESTDIR)$(UNITDIR)
++	cp qubes-session.target $(DESTDIR)$(UNITDIR)
++	mkdir -p $(DESTDIR)/usr/lib/systemd/user/graphical-session.target.requires
++	cp bind-qubes-session.service $(DESTDIR)/usr/lib/systemd/user
++	ln -s $(DESTDIR)/usr/lib/systemd/user/bind-qubes-session.service $(DESTDIR)/usr/lib/systemd/user/graphical-session.target.requires/
  	install -d $(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d
  	install -m 0644 lvm2-pvscan@.service.d_30_qubes.conf \
  		$(DESTDIR)$(UNITDIR)/lvm2-pvscan@.service.d/30_qubes.conf
+diff --git a/linux/systemd/bind-qubes-session.service b/linux/systemd/bind-qubes-session.service
+new file mode 100644
+index 00000000..186e6001
+--- /dev/null
++++ b/linux/systemd/bind-qubes-session.service
+@@ -0,0 +1,9 @@
++[Unit]
++Description=Qube login session binder
++BindsTo=graphical-session.target
++
++[Service]
++Type=oneshot
++RemainAfterExit=yes
++ExecStart=systemctl --system start qubes-session.target
++ExecStop=systemctl --system stop qubes-session.target
 diff --git a/linux/systemd/qubes-db@.service b/linux/systemd/qubes-db@.service
 new file mode 100644
 index 00000000..dc7f44f9
@@ -88,6 +179,37 @@ index 00000000..dbfcfcda
 +
 +[Socket]
 +ListenStream=/run/qubes/qubesdb.%i.sock
+diff --git a/linux/systemd/qubes-guid.service b/linux/systemd/qubes-guid.service
+new file mode 100644
+index 00000000..1493f404
+--- /dev/null
++++ b/linux/systemd/qubes-guid.service
+@@ -0,0 +1,8 @@
++[Unit]
++Description=Qubes GUI daemons
++Requires=qubes-session.target
++
++[Service]
++Type=oneshot
++ExecStart=/usr/lib/qubes/start-guids.sh
++RemainAfterExit=yes
+diff --git a/linux/systemd/qubes-guid@.service b/linux/systemd/qubes-guid@.service
+new file mode 100644
+index 00000000..7e2253a4
+--- /dev/null
++++ b/linux/systemd/qubes-guid@.service
+@@ -0,0 +1,11 @@
++[Unit]
++Description=Qubes GUI daemon for %i
++After=qubes-qube@%i.service
++Requires=qubes-qube@%i.service qubes-session.target
++PartOf=qubes-qube@%i.service qubes-session.target
++
++[Service]
++Type=simple
++Environment=DISPLAY=:0
++EnvironmentFile=/run/qubes/%i.qube
++ExecStart=/usr/bin/qubes-guid -f -d ${DOMID} -N %i ${QUBE_COLOR} -i /usr/share/icons/hicolor/128x128/devices/${QUBE_ICON}.png
 diff --git a/linux/systemd/qubes-qrexec@.service b/linux/systemd/qubes-qrexec@.service
 new file mode 100644
 index 00000000..92bf0a00
@@ -117,20 +239,29 @@ index 00000000..6b40bc83
 +ListenStream=/run/qubes/qrexec.%i
 diff --git a/linux/systemd/qubes-qube@.service b/linux/systemd/qubes-qube@.service
 new file mode 100644
-index 00000000..8cfac8b0
+index 00000000..67956673
 --- /dev/null
 +++ b/linux/systemd/qubes-qube@.service
 @@ -0,0 +1,10 @@
 +[Unit]
 +After=qubes-db@%i.socket qubes-qrexec@%i.socket
 +Requires=qubes-db@%i.socket qubes-qrexec@%i.socket
-+Wants=qubes-db@%i.service qubes-qrexec@%i.service
++Wants=qubes-db@%i.service qubes-qrexec@%i.service qubes-guid@%i.service
 +
 +[Service]
 +Type=oneshot
 +ExecStart=/usr/lib/qubes/write-qube-file.sh %i
 +ExecStop=rm /run/qubes/%i.qube
 +RemainAfterExit=yes
+diff --git a/linux/systemd/qubes-session.target b/linux/systemd/qubes-session.target
+new file mode 100644
+index 00000000..ef5ed06d
+--- /dev/null
++++ b/linux/systemd/qubes-session.target
+@@ -0,0 +1,3 @@
++[Unit]
++Description=Qubes graphical session
++Wants=qubes-guid.service
 diff --git a/linux/systemd/qubesd.service b/linux/systemd/qubesd.service
 index 40e4779d..3726f141 100644
 --- a/linux/systemd/qubesd.service

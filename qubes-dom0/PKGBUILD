@@ -35,7 +35,7 @@ source=(
   0003-qubesd-systemd-improvements.patch
   0004-qubes-special-case-dom0-qubesdb-connection.patch
   0005-qubesd-systemd-socket-activation-support.patch
-  0006-qubesd-add-support-for-managing-qube-daemons-via-sys.patch
+  0006-qubesd-use-systemd-to-manage-per-qube-daemons.patch
   )
 sha512sums=('SKIP'
             '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065'
@@ -44,7 +44,7 @@ sha512sums=('SKIP'
             'ef34245ff878f169fcd3fe47c2e76224beb2b5402282c1988a53ac0c9b72a5d94712dfbee0c204fbbee6c007bcebc2df0ecfa11fd29dc1f963d064258b9d2291'
             '5c40bcca945bd12f27e78c7c6d1df753f038a85f688a1edfae54fbd08483fcd90611050ab525b1db9e049bcb73eadbb8b02865c06d50d08f2e44b0b7e80bbd47'
             '989c432f8df1d040d253b735ba023a237b4594bb96b7b902f83d9648f8e82bf9e4d1f13a29c6c07c64d850674cc94c18cad295aae1ab2c6a5cea32637d51b085'
-            'a9fa961da7e4d276771fa1471655651101c75d62bf36209e94f629f67c690bc0b59a8f791a3e4c11590924a58a88612ce60a9b9ce87fd965ad6abcb1c539fccd')
+            'c242968c064ea957eaaac85d5d167041dfac4730949c51ff411c1ea81b75b795978b2c0134c856a48ad4c2318fd023b066ec57f087fb062cb6012403ebdf53a1')
 
 prepare() {
   git -C ${srcdir}/qubes-core-admin am ${srcdir}/*.patch
