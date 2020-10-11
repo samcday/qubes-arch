@@ -1,20 +1,26 @@
 {
-	"folders":
-	[
-		{
-			"path": ".",
-			"name": "Qubes Arch",
-			"file_exclude_patterns": [
-			],
-			"folder_exclude_patterns": [
-				// makepkg staging directory. very rarely useful to look at.
-				"pkg",
-				"__pycache__",
-			],
-			"binary_file_patterns": [
-				// libvirt build spews lots of mess in here.
-				"build/**",
-			]
-		}
-	]
+  "folders":
+  [
+    {
+      "path": ".",
+      "name": "Qubes Arch",
+      "file_exclude_patterns": [
+      ],
+      "folder_exclude_patterns": [
+        // makepkg staging directory. very rarely useful to look at.
+        "pkg",
+        "__pycache__",
+      ],
+      "binary_file_patterns": [
+        // libvirt build spews lots of mess in here.
+        "build/**",
+      ]
+    }
+  ],
+  "settings":
+  {
+    "rulers": [120],
+    "tab_size": 2,
+    "translate_tabs_to_spaces": true,
+  },
 }
