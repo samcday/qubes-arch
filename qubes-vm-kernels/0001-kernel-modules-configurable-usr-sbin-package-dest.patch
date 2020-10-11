@@ -1,0 +1,26 @@
+From c50955f1779bb60885e4f061f83dbb143de33741 Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Sat, 10 Oct 2020 21:17:15 +0200
+Subject: [PATCH] [kernel-modules] configurable /usr/sbin package dest
+
+---
+ kernel-modules/Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/kernel-modules/Makefile b/kernel-modules/Makefile
+index 98edeb9..77db03d 100644
+--- a/kernel-modules/Makefile
++++ b/kernel-modules/Makefile
+@@ -1,5 +1,7 @@
++SBINDIR ?= /usr/sbin
++
+ install:	install-scripts
+ 
+ install-scripts:
+-	install -d $(DESTDIR)/usr/sbin
+-	install qubes-prepare-vm-kernel $(DESTDIR)/usr/sbin
++	install -d $(DESTDIR)$(SBINDIR)
++	install qubes-prepare-vm-kernel $(DESTDIR)$(SBINDIR)
+-- 
+2.28.0
+

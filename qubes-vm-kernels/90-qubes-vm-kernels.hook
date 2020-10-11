@@ -1,0 +1,15 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Target = usr/lib/dracut/*
+Target = usr/lib/modules/*/
+Target = !usr/lib/modules/*/?*
+
+[Action]
+Depends = dracut
+Description = Updating Qubes vm-kernels...
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/qubes-update-vm-kernels
+NeedsTargets

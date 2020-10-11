@@ -1,0 +1,37 @@
+# Maintainer: Sam Day <me@samcday.com>
+pkgname=qubes-vm-kernels
+pkgver=4.1.11
+pkgrel=1
+pkgdesc="https://github.com/qubesos/qubes-linux-utils"
+arch=(x86_64)
+url="https://github.com/qubesos/qubes-linux-utils"
+license=('GPL')
+depends=(dracut)
+makedepends=()
+optdepends=()
+source=(
+  "git+https://github.com/qubesos/qubes-linux-utils?tag=${pkgver}"
+  0001-kernel-modules-configurable-usr-sbin-package-dest.patch
+  0002-kernel-modules-support-Arch-kernel-image-location.patch
+  90-qubes-vm-kernels.hook
+  qubes-update-vm-kernels
+  )
+sha512sums=('SKIP')
+
+prepare() {
+  utilssrc="${srcdir}/qubes-linux-utils"
+  git -C ${utilssrc} am ${srcdir}/*.patch
+}
+
+package() {
+  {
+    cd "${srcdir}/qubes-linux-utils"
+    export DESTDIR=${pkgdir}
+    export SBINDIR=/usr/bin
+    make -C dracut         install
+    make -C kernel-modules install
+  }
+
+  install -Dm644 "${srcdir}/90-qubes-vm-kernels.hook" "${pkgdir}/usr/share/libalpm/hooks/50-qubes-vm-kernels.hook"
+  install -Dm755 "${srcdir}/qubes-update-vm-kernels"  "${pkgdir}/usr/share/libalpm/scripts/qubes-update-vm-kernels"
+}
