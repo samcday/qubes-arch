@@ -1,7 +1,7 @@
 # Maintainer: Sam Day <me@samcday.com>
 pkgname=(qrexec qrexec-dom0 qrexec-vm)
 pkgbase=qrexec
-pkgver=mm_68b8b65f
+pkgver=4.1.10
 pkgrel=1
 pkgdesc="qrexec, the Qubes OS Remote Procedure Call (RPC) protocol."
 arch=(x86_64)
