@@ -19,6 +19,7 @@ depends=(
   libvirt-python
   pciutils
   qubes-db
+  qubes-qrexec
   )
 makedepends=(
   imagemagick
@@ -26,7 +27,7 @@ makedepends=(
   python-dbus
   python-sphinx
   )
-install=qubes-dom0.install
+install=qubes-admin.install
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
   0001-make-runtime-dir-in-tmpfiles-qubes.conf-configurable.patch
