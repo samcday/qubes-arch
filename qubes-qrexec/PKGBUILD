@@ -10,6 +10,7 @@ license=('GPL')
 depends=(libvchan-xen python python-gbulb)
 makedepends=(
   git
+  lsb-release
   pandoc
   python-asynctest
   python-coverage
