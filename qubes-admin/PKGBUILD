@@ -16,6 +16,7 @@ depends=(
   python-systemd
   python-pyaml
   xen-qubes
+  libvirt-qubes
   libvirt-python
   pciutils
   qubes-db
@@ -36,6 +37,7 @@ source=(
   0004-qubes-special-case-dom0-qubesdb-connection.patch
   0005-qubesd-systemd-socket-activation-support.patch
   0006-qubesd-use-systemd-to-manage-per-qube-daemons.patch
+  0007-qubesd-add-service-depends-on-libvirt-virtxend.socke.patch
   )
 sha512sums=('SKIP'
             '04f1675c33a1715f945c5de60440fdaeff0e97f87ca18e90a19cce0b4dfb06234e636d4f3f0c5d80369494eb716a89dd25ebeb22902f84e9cbf48e51b84b731f'
@@ -43,7 +45,8 @@ sha512sums=('SKIP'
             'ef34245ff878f169fcd3fe47c2e76224beb2b5402282c1988a53ac0c9b72a5d94712dfbee0c204fbbee6c007bcebc2df0ecfa11fd29dc1f963d064258b9d2291'
             '5c40bcca945bd12f27e78c7c6d1df753f038a85f688a1edfae54fbd08483fcd90611050ab525b1db9e049bcb73eadbb8b02865c06d50d08f2e44b0b7e80bbd47'
             '989c432f8df1d040d253b735ba023a237b4594bb96b7b902f83d9648f8e82bf9e4d1f13a29c6c07c64d850674cc94c18cad295aae1ab2c6a5cea32637d51b085'
-            'c242968c064ea957eaaac85d5d167041dfac4730949c51ff411c1ea81b75b795978b2c0134c856a48ad4c2318fd023b066ec57f087fb062cb6012403ebdf53a1')
+            'c242968c064ea957eaaac85d5d167041dfac4730949c51ff411c1ea81b75b795978b2c0134c856a48ad4c2318fd023b066ec57f087fb062cb6012403ebdf53a1'
+            '2296a3fbe0797d975e1f3f75ac77c5f22b1ca298a327378b626c4a336809e4e21296d4d1f528e3b977fc010533b8235a951ea96217626755b34710009889844b')
 
 prepare() {
   git -C ${srcdir}/qubes-core-admin am ${srcdir}/*.patch
