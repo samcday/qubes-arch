@@ -1,5 +1,5 @@
 # Maintainer: Sam Day <me@samcday.com>
-pkgname=(qrexec qrexec-dom0 qrexec-vm)
+pkgname=(qubes-qrexec qubes-qrexec-dom0 qubes-qrexec-vm)
 pkgbase=qrexec
 pkgver=4.1.10
 pkgrel=1
@@ -66,11 +66,11 @@ check() {
   python3 -m coverage run -m pytest qrexec/tests -o python_files=*.py -v "$@"
 }
 
-package_qrexec() {
+package_qubes-qrexec() {
   make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" install-base
 }
 
-package_qrexec-dom0() {
+package_qubes-qrexec-dom0() {
   depends+=(qrexec qubes-dom0)
   conflicts+=(qrexec-vm)
   install=qrexec-dom0.install
@@ -78,9 +78,9 @@ package_qrexec-dom0() {
   make -C "${srcdir}/qubes-core-qrexec" DESTDIR="$pkgdir/" LIBDIR=/usr/lib SBINDIR=/usr/bin install-dom0
 }
 
-package_qrexec-vm() {
-	depends+=(qrexec)
-	conflicts+=(qrexec-dom0)
+package_qubes-qrexec-vm() {
+  depends+=(qrexec)
+  conflicts+=(qrexec-dom0)
 
   make -C qubes-core-qrexec DESTDIR="$pkgdir/" install-vm
 }
