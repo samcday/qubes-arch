@@ -15,7 +15,7 @@ _pciutils=2.2.9
 _polarssl=1.1.4
 _tpm_emulator=0.7.4
 _zlib=1.2.3
-_qubes_vm_xen_rel=4
+_qubes_vm_xen_rel=5
 
 pkgbase=xen-qubes
 pkgname=("xen-qubes" "xen-qubes-docs")
