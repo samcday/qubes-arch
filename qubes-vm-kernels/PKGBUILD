@@ -16,7 +16,11 @@ source=(
   90-qubes-vm-kernels.hook
   qubes-update-vm-kernels
   )
-sha512sums=('SKIP')
+sha512sums=('SKIP'
+            '0bbb9c8874af4b2598dd382f72fd395c52e34f70f3a3324d484f9d5bf78f2e462b4a4126540dad1ce03ee181218765c1ac27f3473616aa6e0afee929a611cf81'
+            '6e52b0522e4ca98063486f67c0aee149659c32f3f657e9d36bf8b6164a51392c38f9bf99bb8ac80f1e97f422e220aa85c296c24bee58abc5f31255fbd43d390a'
+            '6dc1da8ebe8b8ce9243595650157b087e709cfd0f36bf8f4bda02f4173e07ea8903e251a3177da54700e66b478dc16f831245aaac88b06b6d3155f70c6ded31e'
+            '2b426ecf9f4a9a38369d774ff693f635a7777432ffbea85075e201f6db2deb9484def7f18a189e639ff0013729258e0f2730e0fdf788a42cec0ecc2a6bc553fa')
 
 prepare() {
   utilssrc="${srcdir}/qubes-linux-utils"
