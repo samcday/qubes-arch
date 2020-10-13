@@ -1,0 +1,67 @@
+From b454462a34f69b1371cd72905f373917168ddfba Mon Sep 17 00:00:00 2001
+From: Sam Day <me@samcday.com>
+Date: Tue, 13 Oct 2020 11:56:04 +0200
+Subject: [PATCH] Remove check for /etc/qubes-release
+
+Instead, use the local qubesd socket if it exists, remote otherwise.
+---
+ qubesadmin/__init__.py |  4 +---
+ qubesadmin/app.py      | 14 ++++++++++++++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/qubesadmin/__init__.py b/qubesadmin/__init__.py
+index 2cbcfc7..1dd361d 100644
+--- a/qubesadmin/__init__.py
++++ b/qubesadmin/__init__.py
+@@ -20,15 +20,13 @@
+ 
+ '''Qubes OS management client.'''
+ 
+-import os
+-
+ import qubesadmin.config
+ import qubesadmin.base
+ import qubesadmin.app
+ 
+ DEFAULT = qubesadmin.base.DEFAULT
+ 
+-if os.path.exists('/etc/qubes-release'):
++if qubesadmin.app.QubesLocal.check_socket():
+     Qubes = qubesadmin.app.QubesLocal
+ else:
+     Qubes = qubesadmin.app.QubesRemote
+diff --git a/qubesadmin/app.py b/qubesadmin/app.py
+index 6c5d2a0..3d64026 100644
+--- a/qubesadmin/app.py
++++ b/qubesadmin/app.py
+@@ -27,6 +27,7 @@ import os
+ import shlex
+ import socket
+ import shutil
++import stat
+ import subprocess
+ import sys
+ 
+@@ -665,6 +666,19 @@ class QubesLocal(QubesBase):
+ 
+     qubesd_connection_type = 'socket'
+ 
++    @staticmethod
++    def check_socket():
++        """
++        :return: if the qubesd socket exists (bool)
++        """
++        try:
++            mode = os.stat(qubesadmin.config.QUBESD_SOCKET).st_mode
++            return stat.S_ISSOCK(mode)
++        except FileNotFoundError:
++            pass
++        return False
++
++
+     def qubesd_call(self, dest, method, arg=None, payload=None,
+                     payload_stream=None):
+         """
+-- 
+2.28.0
+

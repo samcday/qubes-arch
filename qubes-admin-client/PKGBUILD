@@ -31,8 +31,15 @@ options=()
 install=
 changelog=
 source=(
-  "git+https://github.com/QubesOS/qubes-core-admin-client?tag=${pkgver}")
-sha512sums=('SKIP')
+  "git+https://github.com/QubesOS/qubes-core-admin-client?tag=${pkgver}"
+  "0001-Remove-check-for-etc-qubes-release.patch"
+  )
+sha512sums=('SKIP'
+            '876d73371277f63228f5d26ff002f2c039ddc9d624b2eb86c261f328748f48345d647b258aba04a1015349d382907248ddf7e862bc564d8c92da28baf858dcf3')
+
+prepare() {
+  git -C ${srcdir}/qubes-core-admin-client am ${srcdir}/*.patch
+}
 
 build() {
   cd qubes-core-admin-client
