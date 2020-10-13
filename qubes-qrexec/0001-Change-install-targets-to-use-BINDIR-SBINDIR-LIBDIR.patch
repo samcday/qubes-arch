@@ -1,4 +1,4 @@
-From bc0624d581094bcb28b8e081804dcc7e04ac3b03 Mon Sep 17 00:00:00 2001
+From 3b46cbd2acbaeedff3596d0a364a0f2fc0a2096b Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Sun, 27 Sep 2020 00:18:45 +0200
 Subject: [PATCH] Change install targets to use BINDIR/SBINDIR/LIBDIR

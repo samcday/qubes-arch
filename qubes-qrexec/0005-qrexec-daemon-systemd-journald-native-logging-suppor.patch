@@ -1,4 +1,4 @@
-From cfad1f37d6358f55fbd8934dbe92f04d1ca5ca6f Mon Sep 17 00:00:00 2001
+From 76c8b94d640b69304d4e5d4f7f3c7902303d8215 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Wed, 7 Oct 2020 12:01:25 +0200
 Subject: [PATCH] [qrexec-daemon] systemd-journald native logging support
@@ -8,7 +8,7 @@ Subject: [PATCH] [qrexec-daemon] systemd-journald native logging support
  1 file changed, 25 insertions(+), 3 deletions(-)
 
 diff --git a/daemon/qrexec-daemon.c b/daemon/qrexec-daemon.c
-index 4d6af09..cc20595 100644
+index f334f60..5ca776a 100644
 --- a/daemon/qrexec-daemon.c
 +++ b/daemon/qrexec-daemon.c
 @@ -35,10 +35,29 @@
@@ -42,7 +42,7 @@ index 4d6af09..cc20595 100644
  #endif
  
  #define QREXEC_MIN_VERSION QREXEC_PROTOCOL_V2
-@@ -174,7 +193,7 @@ int create_qrexec_socket(int domid, const char *domname)
+@@ -180,7 +199,7 @@ int create_qrexec_socket(int domid, const char *domname)
      /* When running as root, make the socket accessible; perms on /var/run/qubes still apply */
      umask(0);
      if (symlink(socket_address, link_to_socket_name)) {
@@ -51,7 +51,7 @@ index 4d6af09..cc20595 100644
      }
      int fd = get_server_socket(socket_address);
      umask(0077);
-@@ -265,6 +284,8 @@ void init(int xid)
+@@ -271,6 +290,8 @@ void init(int xid)
      int startup_timeout = MAX_STARTUP_TIME_DEFAULT;
      const char *startup_timeout_str = NULL;
  
@@ -60,7 +60,7 @@ index 4d6af09..cc20595 100644
      if (xid <= 0) {
          LOG(ERROR, "domain id=0?");
          exit(1);
-@@ -332,12 +353,14 @@ void init(int xid)
+@@ -338,12 +359,14 @@ void init(int xid)
          }
      }
  
@@ -75,7 +75,7 @@ index 4d6af09..cc20595 100644
      protocol_version = handle_agent_hello(vchan, remote_domain_name);
      if (protocol_version < 0) {
          exit(1);
-@@ -1161,7 +1184,6 @@ int main(int argc, char **argv)
+@@ -1183,7 +1206,6 @@ int main(int argc, char **argv)
      sigprocmask(SIG_BLOCK, &selectmask, NULL);
      sigemptyset(&selectmask);
  

@@ -1,4 +1,4 @@
-From bc31011d31715b4ae96f717be858ad9624a01d18 Mon Sep 17 00:00:00 2001
+From 528ba048f49e8ec4ef9a2753f7be030d2d517f43 Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Mon, 5 Oct 2020 22:36:30 +0200
 Subject: [PATCH] [qrexec-daemon] socket activation support
@@ -43,7 +43,7 @@ index c6f4380..03a06d3 100644
  %.o: %.c
  	$(CC) $< -c -o $@ $(QUBES_CFLAGS) -MD -MP -MF $@.dep
 diff --git a/daemon/qrexec-daemon.c b/daemon/qrexec-daemon.c
-index f82a4fd..25e2bca 100644
+index b3b8870..2c93ecc 100644
 --- a/daemon/qrexec-daemon.c
 +++ b/daemon/qrexec-daemon.c
 @@ -37,6 +37,10 @@
@@ -57,7 +57,7 @@ index f82a4fd..25e2bca 100644
  #define QREXEC_MIN_VERSION QREXEC_PROTOCOL_V2
  #define QREXEC_SOCKET_PATH "/var/run/qubes/policy.sock"
  
-@@ -356,9 +360,13 @@ void init(int xid)
+@@ -362,9 +366,13 @@ void init(int xid)
          vchan_port_notify_client[i] = VCHAN_PORT_UNUSED;
      }
  

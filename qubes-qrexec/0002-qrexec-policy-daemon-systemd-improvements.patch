@@ -1,4 +1,4 @@
-From 78bd3ee2a21ca656d68b5d713894eb0d7944843d Mon Sep 17 00:00:00 2001
+From 82a7219ee682268d34686363cca3e42cfd2f373e Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Mon, 5 Oct 2020 10:08:04 +0200
 Subject: [PATCH] [qrexec-policy-daemon] systemd improvements

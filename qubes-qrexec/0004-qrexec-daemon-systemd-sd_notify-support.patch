@@ -1,4 +1,4 @@
-From 9fa00a812ca1075bb52db7fa524872f1e58c560c Mon Sep 17 00:00:00 2001
+From 6ddc5010035d0dab3e7a027613410b9f1b32aaaa Mon Sep 17 00:00:00 2001
 From: Sam Day <me@samcday.com>
 Date: Tue, 6 Oct 2020 09:48:52 +0200
 Subject: [PATCH] [qrexec-daemon] systemd sd_notify support
@@ -8,10 +8,10 @@ Subject: [PATCH] [qrexec-daemon] systemd sd_notify support
  1 file changed, 7 insertions(+)
 
 diff --git a/daemon/qrexec-daemon.c b/daemon/qrexec-daemon.c
-index 25e2bca..4d6af09 100644
+index 2c93ecc..f334f60 100644
 --- a/daemon/qrexec-daemon.c
 +++ b/daemon/qrexec-daemon.c
-@@ -1161,6 +1161,13 @@ int main(int argc, char **argv)
+@@ -1183,6 +1183,13 @@ int main(int argc, char **argv)
      sigprocmask(SIG_BLOCK, &selectmask, NULL);
      sigemptyset(&selectmask);
  
