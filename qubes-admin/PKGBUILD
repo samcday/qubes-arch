@@ -1,6 +1,6 @@
 # Maintainer: Sam Day <me@samcday.com>
 pkgname=qubes-admin
-pkgver=mm_67faa7c1
+pkgver=4.1.16
 pkgrel=1
 pkgdesc="Qubes component: core-admin"
 arch=(x86_64)
