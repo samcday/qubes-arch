@@ -1,5 +1,5 @@
 # Maintainer: Sam Day <me@samcday.com>
-pkgname=qubesadmin
+pkgname=qubes-admin-client
 pkgver=4.1.10
 pkgrel=1
 pkgdesc="Qubes management API client "
