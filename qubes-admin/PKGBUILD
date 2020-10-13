@@ -1,5 +1,5 @@
 # Maintainer: Sam Day <me@samcday.com>
-pkgname=qubes-dom0
+pkgname=qubes-admin
 pkgver=mm_67faa7c1
 pkgrel=1
 pkgdesc="Qubes component: core-admin"
