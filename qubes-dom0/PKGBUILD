@@ -29,7 +29,6 @@ makedepends=(
 install=qubes-dom0.install
 source=(
   "git+https://github.com/qubesos/qubes-core-admin?tag=${pkgver}"
-  qubes.sysusers
   0001-make-runtime-dir-in-tmpfiles-qubes.conf-configurable.patch
   0002-qmemman-systemd-improvements.patch
   0003-qubesd-systemd-improvements.patch
@@ -38,7 +37,6 @@ source=(
   0006-qubesd-use-systemd-to-manage-per-qube-daemons.patch
   )
 sha512sums=('SKIP'
-            '7dcff76193b9b802e896e3ce2ae87eff0b6b78808eb730144625ed12d3a0e1ce29585a86a2a23bbceeff586dfaf621c9a9e127935eabcc9a7f022da125927065'
             '04f1675c33a1715f945c5de60440fdaeff0e97f87ca18e90a19cce0b4dfb06234e636d4f3f0c5d80369494eb716a89dd25ebeb22902f84e9cbf48e51b84b731f'
             'e741dc0d76693b6b54b3616312d9b434c998a7b22dc94bf3b4c1236271007c9c37f3b3c95029fcc5e75d79a4b9e98a6b22693ae07466959f5fc866567889ffe1'
             'ef34245ff878f169fcd3fe47c2e76224beb2b5402282c1988a53ac0c9b72a5d94712dfbee0c204fbbee6c007bcebc2df0ecfa11fd29dc1f963d064258b9d2291'
@@ -84,6 +82,4 @@ package() {
   # Remove Python test code cruft.
   # TODO: would be much better to tame setuptools to just not install these.
   rm -rf ${pkgdir}/usr/lib/**/site-packages/**/tests
-
-  install -Dm644 ${srcdir}/qubes.sysusers ${pkgdir}/usr/lib/sysusers.d/qubes.conf
 }
