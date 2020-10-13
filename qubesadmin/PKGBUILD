@@ -12,11 +12,14 @@ depends=(
   python-docutils
   python-lxml
   python-xcffib
-  scrypt)
+  scrypt
+  xorg-xrandr)
 makedepends=(
+  python-asynctest
+  python-coverage
+  python-dbus
   python-setuptools
   python-sphinx
-  python-dbus
   python-yaml
   )
 optdepends=()
