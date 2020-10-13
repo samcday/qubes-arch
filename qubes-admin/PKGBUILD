@@ -79,6 +79,9 @@ package() {
   # We're sending all log output to journald, remove the logrotate.
   rm -rf ${pkgdir}/etc/logrotate.d/
 
+  # The packaged tmpfiles config is not needed.
+  rm ${pkgdir}/usr/lib/tmpfiles.d/qubes.conf
+
   # Remove Python test code cruft.
   # TODO: would be much better to tame setuptools to just not install these.
   rm -rf ${pkgdir}/usr/lib/**/site-packages/**/tests
